@@ -1,1073 +1,1006 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>NexGen Scholar — Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
+<script src="config.js"></script>
+<script src="ai-engine.js"></script>
 <style>
-:root{--primary:#6C63FF;--primary-dark:#5a52d5;--secondary:#FF6B6B;--accent:#4ECDC4;--navy:#0A0E1A;--surface:#111827;--surface2:#1F2937;--border:#1F2937;--border2:#374151;--muted:#6B7280;--text:#F9FAFB;}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh}
-h1,h2,h3,h4,h5{font-family:'Syne',sans-serif}
-.app-layout{display:flex;min-height:100vh;padding-top:56px}
-.sidebar{width:240px;flex-shrink:0;position:fixed;top:56px;left:0;bottom:0;overflow-y:auto;border-right:1px solid var(--border);background:var(--navy);padding:1rem 0;display:flex;flex-direction:column}
-.main-area{margin-left:240px;margin-right:300px;flex:1;min-height:calc(100vh - 56px)}
-.right-panel{width:300px;position:fixed;top:56px;right:0;bottom:0;overflow-y:auto;border-left:1px solid var(--border);background:var(--navy);padding:1.25rem}
-@media(max-width:1200px){.right-panel{display:none}.main-area{margin-right:0}}
-@media(max-width:768px){.sidebar{display:none}.main-area{margin-left:0;margin-right:0}.bottom-nav{display:flex!important}}
-.topnav{position:fixed;top:0;left:0;right:0;z-index:50;height:56px;background:rgba(10,14,26,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem}
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--surface);border-top:1px solid var(--border);justify-content:space-around;padding:0.5rem 0}
-.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0.4rem 1rem;border:none;background:none;color:var(--muted);font-size:0.65rem;font-family:'DM Sans',sans-serif;cursor:pointer;transition:color 0.2s}
-.bnav-btn.active{color:var(--primary)}
-.nav-item{display:flex;align-items:center;gap:10px;padding:0.65rem 1.25rem;color:var(--muted);font-size:0.88rem;font-weight:500;cursor:pointer;border-radius:0;transition:all 0.15s;border-left:3px solid transparent;text-decoration:none}
-.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text)}
-.nav-item.active{color:var(--text);background:rgba(108,99,255,0.08);border-left-color:var(--primary)}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.card-hover{transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s}
-.card-hover:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
-.post-card{padding:1.25rem}
-.post-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface2)}
-.post-content{font-size:0.9rem;line-height:1.65;color:#D1D5DB;margin:0.75rem 0}
-.post-tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:0.7rem;font-weight:600;background:rgba(108,99,255,0.12);color:var(--primary);margin:2px}
-.post-tag.green{background:rgba(78,205,196,0.12);color:#4ECDC4}
-.post-tag.red{background:rgba(255,107,107,0.12);color:#FF6B6B}
-.action-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:none;background:none;color:var(--muted);font-size:0.78rem;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
-.action-btn:hover{background:rgba(255,255,255,0.05);color:var(--text)}
-.action-btn.liked{color:#ef4444}
-.inp{width:100%;padding:0.65rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:all 0.2s}
-.inp::placeholder{color:var(--muted)}
-.inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,0.12);background:rgba(255,255,255,0.06)}
-textarea.inp{resize:vertical;min-height:80px}
-.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;padding:0.65rem 1.25rem;font-size:0.88rem;transition:all 0.2s}
-.btn-primary:hover{background:var(--primary-dark);box-shadow:0 6px 20px rgba(108,99,255,0.3)}
-.btn-primary:disabled{opacity:0.6;cursor:not-allowed}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:10px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0.6rem 1.1rem;font-size:0.85rem;transition:all 0.2s}
-.btn-ghost:hover{border-color:var(--border2);color:var(--text);background:rgba(255,255,255,0.04)}
-.btn-accent{background:var(--accent);color:#0A0E1A;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;padding:0.65rem 1.25rem;font-size:0.88rem;transition:all 0.2s}
-.btn-accent:hover{background:#3db8b0}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
-.overlay.open{display:flex}
-.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:modalIn 0.25s ease}
-@keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px 22px;border-radius:999px;font-size:0.82rem;opacity:0;pointer-events:none;transition:all 0.3s;z-index:999;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.error{background:#7f1d1d;border-color:#991b1b}
-.toast.success{background:#14532d;border-color:#166534}
-.section-header{padding:1.25rem 1.25rem 0;border-bottom:1px solid var(--border);padding-bottom:1.25rem}
-.profile-stat{text-align:center}
-.profile-stat-num{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700}
-.profile-stat-lbl{font-size:0.7rem;color:var(--muted);margin-top:1px}
-.tech-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:0.68rem;font-weight:600;background:rgba(255,255,255,0.06);color:#9CA3AF;margin:2px}
-.spin{animation:spin 0.7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
-.empty-icon{font-size:3rem;margin-bottom:1rem}
-.avatar-placeholder{display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;font-family:'Syne',sans-serif;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));flex-shrink:0}
-.g-text{background:linear-gradient(135deg,#6C63FF,#4ECDC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.comment{padding:0.75rem;background:rgba(255,255,255,0.02);border-radius:10px;margin-top:0.5rem}
-.course-card{padding:1.25rem;cursor:pointer}
-.progress-bar-bg{width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
-.progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width 0.5s}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:0.72rem;font-weight:600}
-.badge-blue{background:rgba(108,99,255,0.15);color:var(--primary)}
-.badge-green{background:rgba(78,205,196,0.15);color:var(--accent)}
-.badge-red{background:rgba(255,107,107,0.15);color:var(--secondary)}
-.badge-yellow{background:rgba(251,191,36,0.15);color:#fbbf24}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+:root{--a:#6C5CE7;--a2:#A29BFE;--a3:#00CEC9;--w:#FDCB6E;--co:#E17055;--dk:#0B0D17;--s:#12152A;--s2:#1A1E35;--s3:#222744;--b:#252A45;--b2:#353B5E;--m:#6B7094;--t:#E8E9F3}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:var(--dk);color:var(--t);min-height:100vh}
+.al{display:flex;min-height:100vh;padding-top:56px}
+.sb{width:220px;flex-shrink:0;position:fixed;top:56px;left:0;bottom:0;overflow-y:auto;border-right:1px solid var(--b);background:var(--dk);padding:0.5rem 0;display:flex;flex-direction:column;font-size:0.82rem}
+.ma{margin-left:220px;margin-right:300px;flex:1;min-height:calc(100vh - 56px)}
+.rp{width:300px;position:fixed;top:56px;right:0;bottom:0;overflow-y:auto;border-left:1px solid var(--b);background:var(--dk);padding:1rem;font-size:0.82rem}
+@media(max-width:1200px){.rp{display:none}.ma{margin-right:0}}
+@media(max-width:768px){.sb{display:none}.ma{margin-left:0;margin-right:0}.bn{display:flex!important}}
+.tn{position:fixed;top:0;left:0;right:0;z-index:50;height:56px;background:rgba(11,13,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:0 1rem}
+.bn{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--s);border-top:1px solid var(--b);justify-content:space-around;padding:0.4rem 0}
+.bnb{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0.3rem 0.4rem;border:none;background:none;color:var(--m);font-size:0.55rem;cursor:pointer}.bnb.act{color:var(--a2)}
+.ni{display:flex;align-items:center;gap:8px;padding:0.5rem 1rem;color:var(--m);font-size:0.8rem;font-weight:500;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;text-decoration:none}
+.ni:hover{background:rgba(255,255,255,0.03);color:var(--t)}.ni.act{color:var(--t);background:rgba(108,92,231,0.08);border-left-color:var(--a)}
+.ni svg{width:15px;height:15px;flex-shrink:0}
+.cd{background:var(--s);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.inp{width:100%;padding:0.6rem 0.85rem;background:rgba(255,255,255,0.04);border:1px solid var(--b2);border-radius:10px;font-family:'Outfit';font-size:0.85rem;color:var(--t);outline:none;transition:all 0.2s}
+.inp::placeholder{color:var(--m)}.inp:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(108,92,231,0.12)}
+textarea.inp{resize:vertical;min-height:70px}
+.bp{background:var(--a);color:#fff;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.85rem;transition:all 0.2s}
+.bp:hover{background:#5A4BD1}.bp:disabled{opacity:0.5;cursor:not-allowed}
+.bg{background:transparent;color:var(--m);border:1px solid var(--b2);border-radius:10px;font-family:'Outfit';cursor:pointer;padding:0.55rem 1rem;font-size:0.82rem;transition:all 0.2s}
+.bg:hover{color:var(--t);background:rgba(255,255,255,0.04)}
+.bt{background:var(--a3);color:#0B0D17;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.85rem}
+.bw{background:var(--w);color:#0B0D17;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.85rem}
+.bc{background:var(--co);color:#fff;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.85rem}
+.act{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;border:none;background:none;color:var(--m);font-size:0.75rem;cursor:pointer;transition:all 0.15s;font-family:'Outfit'}
+.act:hover{background:rgba(255,255,255,0.05);color:var(--t)}
+.tg{display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.68rem;font-weight:600}
+.tp{background:rgba(108,92,231,0.15);color:var(--a2)}.tt{background:rgba(0,206,201,0.15);color:var(--a3)}
+.tw{background:rgba(253,203,110,0.15);color:var(--w)}.tc{background:rgba(225,112,85,0.15);color:var(--co)}
+.tgn{background:rgba(34,197,94,0.15);color:#4ade80}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.ov.open{display:flex}
+.mb{background:var(--s);border:1px solid var(--b2);border-radius:18px;padding:1.5rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:mI 0.2s ease}
+@keyframes mI{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.tst{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);border:1px solid var(--b2);color:var(--t);padding:8px 20px;border-radius:999px;font-size:0.8rem;opacity:0;pointer-events:none;transition:all 0.3s;z-index:999}
+.tst.show{opacity:1;transform:translateX(-50%) translateY(0)}.tst.err{background:#4A1942}.tst.ok{background:#0A3D2E}
+.sh{padding:1rem 1rem 0;border-bottom:1px solid var(--b);padding-bottom:1rem}
+.av{display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;color:#fff;background:linear-gradient(135deg,#6C5CE7,#A29BFE);flex-shrink:0}
+.gt{background:linear-gradient(135deg,#6C5CE7,#A29BFE 40%,#00CEC9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* Chat */
+.cc{display:flex;flex-direction:column;height:calc(100vh - 56px)}
+.cms{flex:1;overflow-y:auto;padding:1rem}
+.cip{padding:0.75rem 1rem;border-top:1px solid var(--b);background:var(--dk)}
+.msg{max-width:82%;margin-bottom:0.75rem;padding:0.75rem 1rem;border-radius:14px;font-size:0.85rem;line-height:1.6}
+.mu{background:var(--a);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.ma2{background:var(--s2);color:var(--t);border-bottom-left-radius:4px}
+/* Tutor mode tabs */
+.tm{padding:0.4rem 0.8rem;border-radius:8px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid var(--b2);background:none;color:var(--m);transition:all 0.2s}
+.tm.act{background:var(--a);color:#fff;border-color:var(--a)}
+/* Progress */
+.pb{height:5px;background:var(--s3);border-radius:999px;overflow:hidden}
+.pf{height:100%;border-radius:999px;transition:width 0.5s}
+/* Stat */
+.sc{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:1rem}
+.sn{font-size:1.5rem;font-weight:800;line-height:1}
+/* Empty */
+.ey{text-align:center;padding:3rem 2rem;color:var(--m)}.ei{font-size:2.5rem;margin-bottom:0.8rem}
+/* Stripe */
+.as{height:3px;background:linear-gradient(90deg,#6C5CE7 25%,#00CEC9 50%,#FDCB6E 75%,#E17055)}
+.spin{animation:sp 0.7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+/* Whiteboard canvas */
+#wb-canvas{background:var(--s);border-radius:10px;border:1px solid var(--b2);cursor:crosshair}
+/* Result sections */
+.rs{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:1.25rem;margin-bottom:0.75rem}
+.rs h4{font-weight:700;font-size:0.9rem;margin-bottom:0.5rem}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
 </style>
 </head>
 <body>
-
 <!-- LOADING -->
-<div id="loading-screen" style="position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem">
-  <div style="width:52px;height:52px;border-radius:14px;background:var(--primary);display:flex;align-items:center;justify-content:center">
-    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-  </div>
-  <p style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700">NexGen<span style="color:var(--primary)">Scholar</span></p>
-  <div style="width:32px;height:32px;border:3px solid rgba(108,99,255,0.2);border-top-color:var(--primary);border-radius:50%" class="spin"></div>
+<div id="ls" style="position:fixed;inset:0;background:var(--dk);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.8rem">
+<div class="as" style="position:absolute;top:0;left:0;right:0"></div>
+<div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#6C5CE7,#00CEC9)"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+<p style="font-weight:800">NexGen<span class="gt">Scholar</span></p>
+<div style="width:28px;height:28px;border:3px solid rgba(108,92,231,0.2);border-top-color:var(--a);border-radius:50%" class="spin"></div>
 </div>
 
-<!-- TOPNAV -->
-<nav class="topnav">
-  <div class="flex items-center gap-3">
-    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--primary)">
-      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-    </div>
-    <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem">NexGen<span style="color:var(--primary)">Scholar</span></span>
-  </div>
-  <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl flex-1 max-w-sm mx-6" style="background:rgba(255,255,255,0.05);border:1px solid var(--border2)">
-    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input type="text" placeholder="Search courses, topics, doubts…" id="global-search" style="background:none;border:none;outline:none;font-size:0.83rem;color:var(--text);width:100%;font-family:'DM Sans',sans-serif"/>
-  </div>
-  <div class="flex items-center gap-3">
-    <button onclick="showSection('ai-tutor')" class="relative p-2 rounded-lg hover:bg-white/5 transition-colors" style="border:none;background:none;cursor:pointer;color:var(--primary)">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    </button>
-    <div id="nav-user" class="flex items-center gap-2 cursor-pointer" onclick="showSection('profile')">
-      <div id="nav-avatar" class="avatar-placeholder" style="width:32px;height:32px;font-size:0.75rem">?</div>
-      <span id="nav-name" class="hidden md:block text-sm font-medium" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    </div>
-    <button onclick="signOut()" class="btn-ghost text-xs px-3 py-2">Sign Out</button>
-  </div>
+<!-- TOP NAV -->
+<nav class="tn">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#6C5CE7,#00CEC9)"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+<span style="font-weight:800;font-size:0.95rem">NexGen<span class="gt">Scholar</span></span>
+</div>
+<div class="flex items-center gap-2">
+<div id="nx" class="hidden md:flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold" style="background:rgba(108,92,231,0.15);color:var(--a2)">⚡ <span id="nxv">0</span> XP</div>
+<div id="na" class="av" style="width:30px;height:30px;font-size:0.7rem;cursor:pointer" onclick="S('profile')">?</div>
+<button onclick="doSignOut()" class="bg text-xs px-2 py-1">Sign Out</button>
+</div>
 </nav>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="px-4 mb-4">
-    <button onclick="showSection('ai-tutor')" class="btn-primary w-full py-3 text-sm">🤖 Ask AI Tutor</button>
-  </div>
-  <nav>
-    <a class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Dashboard
-    </a>
-    <a class="nav-item" data-section="courses" onclick="showSection('courses')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Courses
-    </a>
-    <a class="nav-item" data-section="ai-tutor" onclick="showSection('ai-tutor')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      AI Tutor
-    </a>
-    <a class="nav-item" data-section="practice" onclick="showSection('practice')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Practice
-    </a>
-    <a class="nav-item" data-section="doubts" onclick="showSection('doubts')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Doubts
-    </a>
-    <a class="nav-item" data-section="community" onclick="showSection('community')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Community
-    </a>
-    <a class="nav-item" data-section="profile" onclick="showSection('profile')">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      My Profile
-    </a>
-  </nav>
-  <div class="mt-auto px-4 pb-4">
-    <div class="p-3 rounded-xl" style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2)">
-      <p class="text-xs font-bold mb-1" style="color:var(--primary)">🤖 AI Study Companion</p>
-      <p class="text-xs" style="color:var(--muted);line-height:1.5">Your AI companion is always ready. Ask anything, anytime.</p>
-    </div>
-  </div>
+<!-- SIDEBAR — ALL 20+ sections -->
+<aside class="sb">
+<div class="px-3 mb-2"><button onclick="S('tutor')" class="bp w-full py-2.5 text-sm">🤖 AI Tutor</button></div>
+<nav id="side-nav">
+<a class="ni act" data-s="dash" onclick="S('dash')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+<a class="ni" data-s="tutor" onclick="S('tutor')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>AI Tutor</a>
+<a class="ni" data-s="courses" onclick="S('courses')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Courses</a>
+<a class="ni" data-s="doclab" onclick="S('doclab')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Document Lab</a>
+<a class="ni" data-s="assess" onclick="S('assess')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Assessments</a>
+<a class="ni" data-s="practice" onclick="S('practice')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>Practice Arena</a>
+<a class="ni" data-s="planner" onclick="S('planner')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>Study Planner</a>
+<a class="ni" data-s="kmap" onclick="S('kmap')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7"/><polyline points="2 17 12 22 22 17"/></svg>Knowledge Map</a>
+<a class="ni" data-s="research" onclick="S('research')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>Research Partner</a>
+<a class="ni" data-s="writing" onclick="S('writing')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Writing Lab</a>
+<a class="ni" data-s="present" onclick="S('present')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Presentation Coach</a>
+<a class="ni" data-s="interview" onclick="S('interview')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Interview Prep</a>
+<a class="ni" data-s="dream" onclick="S('dream')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Dream Path</a>
+<a class="ni" data-s="timeline" onclick="S('timeline')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Time Machine</a>
+<a class="ni" data-s="lab" onclick="S('lab')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v7.2L4.7 17.6A2 2 0 006.3 21h11.4a2 2 0 001.6-3.4L15 10.2V3"/><line x1="9" y1="3" x2="15" y2="3"/></svg>Lab Partner</a>
+<a class="ni" data-s="lesson" onclick="S('lesson')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Lesson Gen</a>
+<a class="ni" data-s="doubts" onclick="S('doubts')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Doubts</a>
+<a class="ni" data-s="community" onclick="S('community')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Community</a>
+<a class="ni" data-s="stress" onclick="S('stress')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Stress Help</a>
+<a class="ni" data-s="parent" onclick="S('parent')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Parent Portal</a>
+<a class="ni" data-s="analytics" onclick="S('analytics')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</a>
+<a class="ni" data-s="studio" onclick="S('studio')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>Content Studio</a>
+<a class="ni" data-s="elibrary" onclick="S('elibrary')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>E-Library</a>
+<a class="ni" data-s="forums" onclick="S('forums')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Forums</a>
+<a class="ni" data-s="certs" onclick="S('certs')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>Certificates</a>
+<a class="ni" data-s="notifs" onclick="S('notifs')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Notifications</a>
+<a class="ni" data-s="admin" onclick="S('admin')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Panel</a>
+<a class="ni" data-s="profile" onclick="S('profile')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>
+</nav>
 </aside>
 
-<!-- RIGHT PANEL -->
-<aside class="right-panel">
-  <div class="mb-6">
-    <h4 class="text-sm font-bold mb-3" style="color:var(--muted)">YOUR PROGRESS</h4>
-    <div id="right-progress" class="flex flex-col gap-3"></div>
-  </div>
-  <div class="mb-6">
-    <h4 class="text-sm font-bold mb-3" style="color:var(--muted)">STUDY STREAK</h4>
-    <div class="p-3 rounded-xl" style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2)">
-      <p class="text-2xl font-bold" style="color:var(--primary)" id="streak-display">0 🔥</p>
-      <p class="text-xs mt-1" style="color:var(--muted)">Days in a row</p>
-    </div>
-  </div>
-  <div>
-    <h4 class="text-sm font-bold mb-3" style="color:var(--muted)">AI TIPS FOR YOU</h4>
-    <div id="ai-tips" class="flex flex-col gap-2">
-      <div class="p-3 rounded-xl text-xs" style="background:var(--surface2);color:var(--muted);line-height:1.6">
-        💡 Start with short 25-minute Pomodoro sessions for maximum retention.
-      </div>
-      <div class="p-3 rounded-xl text-xs" style="background:var(--surface2);color:var(--muted);line-height:1.6">
-        🎯 Review flashcards within 24 hours to lock in memory.
-      </div>
-    </div>
-  </div>
+<!-- RIGHT PANEL — AI Companion -->
+<aside class="rp">
+<h4 class="text-xs font-bold mb-2" style="color:var(--m)">💬 AI COMPANION</h4>
+<div class="cd p-3 mb-4" id="comp-msg"><p class="text-sm">👋 Ready to learn?</p></div>
+<h4 class="text-xs font-bold mb-2" style="color:var(--m)">QUICK ACTIONS</h4>
+<div class="flex flex-col gap-1 mb-4">
+<button onclick="S('tutor')" class="bg text-xs w-full text-left px-2 py-1.5">🤖 AI Tutor</button>
+<button onclick="S('assess')" class="bg text-xs w-full text-left px-2 py-1.5">📝 Quiz</button>
+<button onclick="S('doclab')" class="bg text-xs w-full text-left px-2 py-1.5">📄 Document Lab</button>
+<button onclick="S('planner')" class="bg text-xs w-full text-left px-2 py-1.5">📅 Study Plan</button>
+<button onclick="S('stress')" class="bg text-xs w-full text-left px-2 py-1.5">💚 Stress Help</button>
+</div>
+<h4 class="text-xs font-bold mb-2" style="color:var(--m)">STATS</h4>
+<div class="flex flex-col gap-1 text-xs">
+<div class="flex justify-between p-1.5 rounded" style="background:var(--s)"><span>XP</span><span class="font-bold" style="color:var(--a2)" id="rx">0</span></div>
+<div class="flex justify-between p-1.5 rounded" style="background:var(--s)"><span>Streak</span><span class="font-bold" style="color:var(--a3)" id="rstr">0d</span></div>
+<div class="flex justify-between p-1.5 rounded" style="background:var(--s)"><span>Level</span><span class="font-bold" style="color:var(--w)" id="rlv">1</span></div>
+</div>
 </aside>
 
 <!-- BOTTOM NAV -->
-<nav class="bottom-nav" id="bottom-nav">
-  <button class="bnav-btn active" data-section="dashboard" onclick="showSection('dashboard')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home
-  </button>
-  <button class="bnav-btn" data-section="courses" onclick="showSection('courses')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>Courses
-  </button>
-  <button class="bnav-btn" data-section="ai-tutor" onclick="showSection('ai-tutor')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Tutor
-  </button>
-  <button class="bnav-btn" data-section="practice" onclick="showSection('practice')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>Practice
-  </button>
-  <button class="bnav-btn" data-section="profile" onclick="showSection('profile')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Me
-  </button>
-</nav>
+<nav class="bn"><button class="bnb act" data-s="dash" onclick="S('dash')">🏠Home</button><button class="bnb" data-s="tutor" onclick="S('tutor')">🤖Tutor</button><button class="bnb" data-s="courses" onclick="S('courses')">📚Learn</button><button class="bnb" data-s="assess" onclick="S('assess')">📝Quiz</button><button class="bnb" data-s="profile" onclick="S('profile')">👤Me</button></nav>
 
-<!-- MAIN -->
-<main class="app-layout">
-<div class="main-area" style="padding-bottom:80px">
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT — ALL SECTIONS                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<main class="al"><div class="ma" style="padding-bottom:80px">
+
+<!-- Each section is a <section id="s-NAME"> -->
+<!-- Section generator: All 22 sections defined below -->
 
 <!-- DASHBOARD -->
-<section id="section-dashboard" class="section">
-  <div class="section-header flex items-center justify-between">
-    <div>
-      <h2 class="text-xl font-bold">Welcome back, <span id="dash-name" style="color:var(--primary)">Scholar</span>!</h2>
-      <p class="text-sm mt-1" style="color:var(--muted)">Here's your personalized learning overview</p>
-    </div>
-    <button onclick="showSection('ai-tutor')" class="btn-primary text-sm">🤖 Ask AI</button>
-  </div>
-  <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="card p-4 text-center">
-      <div class="text-2xl font-bold" style="color:var(--primary)" id="stat-courses">0</div>
-      <div class="text-xs mt-1" style="color:var(--muted)">Courses Enrolled</div>
-    </div>
-    <div class="card p-4 text-center">
-      <div class="text-2xl font-bold" style="color:var(--accent)" id="stat-streak">0</div>
-      <div class="text-xs mt-1" style="color:var(--muted)">Day Streak 🔥</div>
-    </div>
-    <div class="card p-4 text-center">
-      <div class="text-2xl font-bold" style="color:var(--secondary)" id="stat-score">0%</div>
-      <div class="text-xs mt-1" style="color:var(--muted)">Avg Quiz Score</div>
-    </div>
-    <div class="card p-4 text-center">
-      <div class="text-2xl font-bold" style="color:#fbbf24" id="stat-time">0h</div>
-      <div class="text-xs mt-1" style="color:var(--muted)">Study Time</div>
-    </div>
-  </div>
-  <div class="p-4">
-    <h3 class="font-bold mb-4">Continue Learning</h3>
-    <div id="continue-learning" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="empty"><div class="empty-icon">🏗️</div><p class="text-sm">Enroll in a course to start learning!</p><button onclick="showSection('courses')" class="btn-primary mt-3 px-4 py-2 text-sm">Browse Courses →</button></div>
-    </div>
-  </div>
-  <div class="p-4">
-    <h3 class="font-bold mb-4">🤖 AI Recommendations</h3>
-    <div id="ai-recommendations" class="flex flex-col gap-3">
-      <div class="card p-4 flex items-center gap-3">
-        <div class="text-2xl">📊</div>
-        <div>
-          <p class="text-sm font-semibold">Take a Diagnostic Quiz</p>
-          <p class="text-xs mt-1" style="color:var(--muted)">Let AI build your personalized learning path</p>
-        </div>
-        <button onclick="showSection('practice')" class="btn-primary text-xs px-3 py-2 ml-auto">Start</button>
-      </div>
-      <div class="card p-4 flex items-center gap-3">
-        <div class="text-2xl">📚</div>
-        <div>
-          <p class="text-sm font-semibold">Upload Study Material</p>
-          <p class="text-xs mt-1" style="color:var(--muted)">AI generates flashcards, quizzes &amp; summaries</p>
-        </div>
-        <button onclick="showSection('courses')" class="btn-primary text-xs px-3 py-2 ml-auto">Upload</button>
-      </div>
-    </div>
-  </div>
+<section id="s-dash" class="sec"><div class="sh"><h2 class="text-base font-bold">Welcome, <span id="dn" class="gt">Learner</span>!</h2></div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-3">
+<div class="sc"><div class="sn gt" id="dx">0</div><div class="text-xs" style="color:var(--m)">XP</div></div>
+<div class="sc"><div class="sn" style="color:var(--a3)" id="dstr">0</div><div class="text-xs" style="color:var(--m)">Streak</div></div>
+<div class="sc"><div class="sn" style="color:var(--w)" id="dq">0</div><div class="text-xs" style="color:var(--m)">Quizzes</div></div>
+<div class="sc"><div class="sn" style="color:var(--co)" id="dlv">1</div><div class="text-xs" style="color:var(--m)">Level</div></div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 px-3 pb-3">
+<div class="cd p-3 cursor-pointer" onclick="S('tutor')"><div class="text-xl mb-1">🤖</div><p class="font-bold text-xs">AI Tutor</p><p class="text-xs" style="color:var(--m)">3 modes + voice</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('assess')"><div class="text-xl mb-1">📊</div><p class="font-bold text-xs">Adaptive Quiz</p><p class="text-xs" style="color:var(--m)">AI-generated</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('doclab')"><div class="text-xl mb-1">📄</div><p class="font-bold text-xs">Document Lab</p><p class="text-xs" style="color:var(--m)">Upload → Learn</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('planner')"><div class="text-xl mb-1">📅</div><p class="font-bold text-xs">Study Planner</p><p class="text-xs" style="color:var(--m)">AI schedule</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('practice')"><div class="text-xl mb-1">🎯</div><p class="font-bold text-xs">Practice Arena</p><p class="text-xs" style="color:var(--m)">Infinite problems</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('research')"><div class="text-xl mb-1">🔬</div><p class="font-bold text-xs">Research Partner</p><p class="text-xs" style="color:var(--m)">Papers + Citations</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('dream')"><div class="text-xl mb-1">🎯</div><p class="font-bold text-xs">Dream Path</p><p class="text-xs" style="color:var(--m)">Career roadmap</p></div>
+<div class="cd p-3 cursor-pointer" onclick="S('timeline')"><div class="text-xl mb-1">⏰</div><p class="font-bold text-xs">Time Machine</p><p class="text-xs" style="color:var(--m)">Concept history</p></div>
+</div>
 </section>
+
+<!-- AI TUTOR — 3 modes + voice + photo + whiteboard + code + debate -->
+<section id="s-tutor" class="sec" style="display:none"><div class="cc">
+<div style="padding:0.5rem 1rem;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.4rem">
+<div class="flex gap-1"><button class="tm act" data-m="direct" onclick="setTM('direct',this)">💡Direct</button><button class="tm" data-m="socratic" onclick="setTM('socratic',this)">🧭Socratic</button><button class="tm" data-m="comprehensive" onclick="setTM('comprehensive',this)">📖Deep</button></div>
+<div class="flex gap-1">
+<button class="act text-xs" onclick="toggleVoice()" id="vbtn" title="Voice Mode">🎤 Voice</button>
+<button class="act text-xs" onclick="S('assess')" title="Quick Quiz">📝 Quiz</button>
+<label class="act text-xs" title="Upload Photo"><input type="file" accept="image/*" onchange="uploadPhoto(this)" style="display:none"/>📷 Photo</label>
+<button class="act text-xs" onclick="startDebate()" title="Debate Mode">⚔️ Debate</button>
+<button class="act text-xs" onclick="clearChat()">🗑️</button>
+</div>
+</div>
+<div class="cms" id="cms"><div class="msg ma2"><p class="font-bold text-xs mb-1" style="color:var(--a2)">🤖 AI Tutor</p>Hi! I'm your AI tutor. I adapt to how you learn. Pick a mode above and ask me anything!</div></div>
+<div class="cip">
+<div class="flex gap-2"><input type="text" id="ci" class="inp flex-1" placeholder="Ask anything… (Enter to send)" onkeydown="if(event.key==='Enter')sendC()"/><button class="bp px-3" onclick="sendC()">Send</button></div>
+<div class="flex gap-1 mt-1.5 flex-wrap">
+<button class="act text-xs" onclick="qc('Explain simply')">💡Simplify</button>
+<button class="act text-xs" onclick="qc('Quiz me')">📝Quiz</button>
+<button class="act text-xs" onclick="qc('Practice problems')">🎯Practice</button>
+<button class="act text-xs" onclick="qc('Common mistakes')">⚠️Pitfalls</button>
+<button class="act text-xs" onclick="qc('Summarize key points')">📋Summary</button>
+<button class="act text-xs" onclick="qc('Give me mnemonics')">🧠Memory Aid</button>
+</div>
+</div></div></section>
 
 <!-- COURSES -->
-<section id="section-courses" class="section" style="display:none">
-  <div class="section-header flex items-center justify-between">
-    <h2 class="text-lg font-bold">Course Library</h2>
-    <button onclick="openModal('create-course')" class="btn-primary text-xs px-3 py-2">+ Add Course</button>
-  </div>
-  <div class="flex gap-2 p-4 overflow-x-auto border-b" style="border-color:var(--border)">
-    <button onclick="filterCourses('all')" class="filter-btn btn-primary text-xs px-3 py-1" data-filter="all">All</button>
-    <button onclick="filterCourses('mathematics')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="mathematics">Mathematics</button>
-    <button onclick="filterCourses('science')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="science">Science</button>
-    <button onclick="filterCourses('programming')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="programming">Programming</button>
-    <button onclick="filterCourses('language')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="language">Language</button>
-    <button onclick="filterCourses('business')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="business">Business</button>
-  </div>
-  <div id="courses-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-    <div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div>Loading courses…</div>
-  </div>
+<section id="s-courses" class="sec" style="display:none"><div class="sh flex items-center justify-between"><h2 class="text-base font-bold">Courses</h2><button onclick="openM('cc')" class="bp text-xs px-3 py-1.5">+ Create</button></div><div id="crs-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3"><div class="ey"><div class="ei">📚</div>Loading…</div></div></section>
+
+<!-- DOCUMENT LAB -->
+<section id="s-doclab" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">📄 Document Lab</h2><p class="text-xs mt-1" style="color:var(--m)">Upload/paste any document → AI generates lessons, flashcards, quizzes, summaries, concept maps, audio scripts</p></div>
+<div class="p-3"><div class="cd p-4" style="border:2px dashed var(--b2);text-align:center">
+<div class="text-3xl mb-2">📄</div><p class="font-bold text-sm mb-1">Paste Document Text</p>
+<input type="text" id="dl-t" class="inp mb-2" placeholder="Document title"/>
+<textarea id="dl-tx" class="inp mb-2" rows="5" placeholder="Paste textbook/notes text here…"></textarea>
+<button class="bp" onclick="processDoc()" id="dl-btn">🤖 Process with AI →</button>
+</div><div id="doc-res" class="mt-3"></div></div></section>
+
+<!-- ASSESSMENTS — Quiz + Essay + Exam Simulator -->
+<section id="s-assess" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">📝 Assessments</h2></div>
+<div class="flex gap-1.5 p-3 border-b" style="border-color:var(--b)">
+<button class="atb bp text-xs px-2 py-1" data-at="quiz" onclick="showAT('quiz',this)">AI Quiz</button>
+<button class="atb bg text-xs px-2 py-1" data-at="essay" onclick="showAT('essay',this)">Essay Grading</button>
+<button class="atb bg text-xs px-2 py-1" data-at="exam" onclick="showAT('exam',this)">Exam Simulator</button>
+<button class="atb bg text-xs px-2 py-1" data-at="predict" onclick="showAT('predict',this)">Score Predictor</button>
+</div>
+<div id="at-quiz" class="p-3"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">Generate AI Quiz</h3>
+<input type="text" id="aq-t" class="inp mb-2" placeholder="Topic: Photosynthesis, Sorting Algorithms…"/>
+<div class="grid grid-cols-3 gap-2 mb-2"><input type="number" id="aq-c" class="inp" value="5" min="1" max="20" placeholder="Count"/><select id="aq-d" class="inp"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option><option value="expert">Expert</option></select><select id="aq-b" class="inp"><option value="mixed">Mixed Bloom's</option><option value="remember">Remember</option><option value="understand">Understand</option><option value="apply">Apply</option><option value="analyze">Analyze</option></select></div>
+<button class="bp w-full" onclick="genQuiz()" id="aq-btn">🤖 Generate →</button></div><div id="quiz-res" class="mt-3"></div></div>
+<div id="at-essay" class="p-3" style="display:none"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">✍️ AI Essay Evaluator</h3>
+<input type="text" id="ae-tp" class="inp mb-2" placeholder="Essay topic"/>
+<textarea id="ae-tx" class="inp mb-2" rows="6" placeholder="Paste essay here…"></textarea>
+<textarea id="ae-rb" class="inp mb-2" rows="2" placeholder="Marking rubric (optional)"></textarea>
+<button class="bp w-full" onclick="gradeEssay()" id="ae-btn">✍️ Grade →</button></div><div id="essay-res" class="mt-3"></div></div>
+<div id="at-exam" class="p-3" style="display:none"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">📋 Full Exam Generator</h3>
+<input type="text" id="ex-sub" class="inp mb-2" placeholder="Subject"/>
+<input type="text" id="ex-top" class="inp mb-2" placeholder="Topics (comma separated)"/>
+<div class="grid grid-cols-2 gap-2 mb-2"><input type="number" id="ex-marks" class="inp" value="100" placeholder="Total marks"/><input type="text" id="ex-dur" class="inp" value="3 hours" placeholder="Duration"/></div>
+<button class="bp w-full" onclick="genExam()" id="ex-btn">📋 Generate Exam →</button></div><div id="exam-res" class="mt-3"></div></div>
+<div id="at-predict" class="p-3" style="display:none"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">🔮 Score Predictor</h3>
+<p class="text-xs mb-3" style="color:var(--m)">Based on your quiz history, AI predicts your likely exam score</p>
+<input type="text" id="pr-sub" class="inp mb-2" placeholder="Subject"/>
+<button class="bp w-full" onclick="predictScore()">🔮 Predict →</button></div><div id="predict-res" class="mt-3"></div></div>
 </section>
 
-<!-- AI TUTOR -->
-<section id="section-ai-tutor" class="section" style="display:none">
-  <div class="section-header">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--primary)">
-        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </div>
-      <div>
-        <h2 class="text-lg font-bold">AI Tutor</h2>
-        <p class="text-xs" style="color:var(--muted)">Powered by GPT-4o · Remembers everything</p>
-      </div>
-    </div>
-    <div class="flex gap-2 mt-3">
-      <button onclick="setTutorMode('guide')" class="tutor-mode-btn btn-primary text-xs px-3 py-2" data-mode="guide">🧠 Guide Me</button>
-      <button onclick="setTutorMode('explain')" class="tutor-mode-btn btn-ghost text-xs px-3 py-2" data-mode="explain">📚 Explain</button>
-      <button onclick="setTutorMode('solve')" class="tutor-mode-btn btn-ghost text-xs px-3 py-2" data-mode="solve">📣 Solve</button>
-    </div>
-  </div>
-  <div id="chat-messages" class="p-4 flex flex-col gap-4" style="min-height:400px;max-height:60vh;overflow-y:auto">
-    <div class="flex gap-3">
-      <div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0">🤖</div>
-      <div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:#D1D5DB;line-height:1.7;max-width:85%">
-        Hello! I'm your AI Tutor powered by GPT-4o. I adapt to your learning style and remember our conversations. What would you like to learn today?
-        <br/><br/>
-        • Ask me to <strong>explain</strong> any concept<br/>
-        • <strong>Quiz</strong> me on a topic<br/>
-        • <strong>Review</strong> my uploaded material<br/>
-        • Help me with a <strong>problem step by step</strong>
-      </div>
-    </div>
-  </div>
-  <div class="p-4 border-t" style="border-color:var(--border)">
-    <div class="flex gap-3">
-      <div id="tutor-avatar" class="avatar-placeholder" style="width:36px;height:36px;font-size:0.8rem;flex-shrink:0">?</div>
-      <div class="flex-1">
-        <textarea id="tutor-input" class="inp" rows="3" placeholder="Ask anything… explain recursion, quiz me on calculus, help with this problem…" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendTutorMessage()"></textarea>
-        <div class="flex gap-2 mt-2">
-          <button onclick="sendTutorMessage()" class="btn-primary text-sm">Send →</button>
-          <button onclick="clearChat()" class="btn-ghost text-xs px-3 py-2">Clear</button>
-          <span class="text-xs ml-auto self-center" style="color:var(--muted)">Ctrl+Enter to send</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="p-4">
-    <p class="text-xs font-bold mb-3" style="color:var(--muted)">QUICK PROMPTS</p>
-    <div class="flex flex-wrap gap-2">
-      <button onclick="quickPrompt('Explain this concept with a simple analogy')" class="post-tag cursor-pointer hover:opacity-80">💡 Simple analogy</button>
-      <button onclick="quickPrompt('Quiz me with 5 questions on this topic')" class="post-tag green cursor-pointer hover:opacity-80">📝 Quiz me</button>
-      <button onclick="quickPrompt('Show me a step-by-step solution')" class="post-tag red cursor-pointer hover:opacity-80">📊 Step by step</button>
-      <button onclick="quickPrompt('What should I study next?')" class="post-tag cursor-pointer hover:opacity-80">🧾 What's next?</button>
-    </div>
-  </div>
+<!-- PRACTICE ARENA — Infinite Problems + Error Analysis -->
+<section id="s-practice" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🎯 Practice Arena</h2><p class="text-xs mt-1" style="color:var(--m)">Infinite problems, step-by-step solutions, error pattern analysis</p></div>
+<div class="p-3"><div class="cd p-4 mb-3"><h3 class="font-bold text-sm mb-3">Generate Practice Problems</h3>
+<input type="text" id="pp-t" class="inp mb-2" placeholder="Topic"/>
+<div class="grid grid-cols-2 gap-2 mb-2"><input type="number" id="pp-c" class="inp" value="5" placeholder="Count"/><select id="pp-d" class="inp"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div>
+<button class="bp w-full" onclick="genProblems()" id="pp-btn">🎯 Generate →</button></div>
+<div id="prob-res" class="mt-3"></div>
+<div class="cd p-4"><h3 class="font-bold text-sm mb-2">📊 Error Pattern Analysis</h3>
+<p class="text-xs mb-2" style="color:var(--m)">AI analyzes your mistakes to find patterns</p>
+<button class="bt w-full" onclick="analyzeErrors()">📊 Analyze My Errors →</button>
+<div id="error-res" class="mt-3"></div></div></div></section>
+
+<!-- STUDY PLANNER -->
+<section id="s-planner" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">📅 AI Study Planner</h2></div>
+<div class="p-3"><div class="cd p-4">
+<input type="text" id="sp-s" class="inp mb-2" placeholder="Subjects: Physics, Math, Chemistry"/>
+<div class="grid grid-cols-2 gap-2 mb-2"><input type="date" id="sp-d" class="inp"/><input type="number" id="sp-h" class="inp" value="4" placeholder="Hrs/day"/></div>
+<input type="text" id="sp-w" class="inp mb-2" placeholder="Weak areas (optional)"/>
+<button class="bp w-full" onclick="genPlan()" id="sp-btn">📅 Generate Plan →</button></div>
+<div id="plan-res" class="mt-3"></div></div></section>
+
+<!-- KNOWLEDGE MAP -->
+<section id="s-kmap" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🗺️ Knowledge Map</h2></div>
+<div class="p-3"><div class="flex gap-2 flex-wrap mb-3">
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full" style="background:#ef4444"></div><span class="text-xs">Weak</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full" style="background:#eab308"></div><span class="text-xs">Developing</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full" style="background:#22c55e"></div><span class="text-xs">Strong</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full" style="background:#8b5cf6"></div><span class="text-xs">Mastered</span></div>
+</div><div id="km-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div></div></section>
+
+<!-- RESEARCH PARTNER -->
+<section id="s-research" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🔬 Research Partner</h2></div>
+<div class="flex gap-1.5 p-3 border-b" style="border-color:var(--b)">
+<button class="rtb bp text-xs px-2 py-1" data-rt="paper" onclick="showRT('paper',this)">Paper Summary</button>
+<button class="rtb bg text-xs px-2 py-1" data-rt="method" onclick="showRT('method',this)">Methodology</button>
+<button class="rtb bg text-xs px-2 py-1" data-rt="cite" onclick="showRT('cite',this)">Citations</button>
+<button class="rtb bg text-xs px-2 py-1" data-rt="lit" onclick="showRT('lit',this)">Lit Review</button>
+</div>
+<div id="rt-paper" class="p-3"><textarea id="rp-tx" class="inp mb-2" rows="5" placeholder="Paste research paper text…"></textarea><button class="bp w-full" onclick="summarizePaper()">📄 Summarize →</button><div id="paper-res" class="mt-3"></div></div>
+<div id="rt-method" class="p-3" style="display:none"><textarea id="rm-q" class="inp mb-2" rows="3" placeholder="Describe your research question…"></textarea><button class="bt w-full" onclick="suggestMethod()">🔬 Suggest Methodology →</button><div id="method-res" class="mt-3"></div></div>
+<div id="rt-cite" class="p-3" style="display:none"><textarea id="rc-s" class="inp mb-2" rows="2" placeholder="Paste source (URL, DOI, or description)…"></textarea><select id="rc-st" class="inp mb-2"><option>APA</option><option>MLA</option><option>Chicago</option><option>Harvard</option></select><button class="bw w-full" onclick="genCitation()">📝 Generate Citation →</button><div id="cite-res" class="mt-3"></div></div>
+<div id="rt-lit" class="p-3" style="display:none"><input type="text" id="rl-t" class="inp mb-2" placeholder="Topic for literature review"/><textarea id="rl-p" class="inp mb-2" rows="4" placeholder="Paste summaries of papers (one per line)…"></textarea><button class="bp w-full" onclick="genLitReview()">📚 Generate Lit Review →</button><div id="lit-res" class="mt-3"></div></div>
 </section>
 
-<!-- PRACTICE -->
-<section id="section-practice" class="section" style="display:none">
-  <div class="section-header flex items-center justify-between">
-    <div>
-      <h2 class="text-lg font-bold">Practice Arena</h2>
-      <p class="text-xs mt-1" style="color:var(--muted)">AI-generated adaptive questions · Infinite practice</p>
-    </div>
-    <button onclick="generateQuiz()" class="btn-primary text-xs px-3 py-2">✨ Generate Quiz</button>
-  </div>
-  <div class="p-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div>
-        <label class="text-xs mb-1 block" style="color:var(--muted)">Subject</label>
-        <select id="quiz-subject" class="inp" style="cursor:pointer">
-          <option value="mathematics">Mathematics</option>
-          <option value="physics">Physics</option>
-          <option value="chemistry">Chemistry</option>
-          <option value="biology">Biology</option>
-          <option value="computer-science">Computer Science</option>
-          <option value="history">History</option>
-          <option value="economics">Economics</option>
-          <option value="custom">Custom Topic</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs mb-1 block" style="color:var(--muted)">Difficulty</label>
-        <select id="quiz-difficulty" class="inp" style="cursor:pointer">
-          <option value="easy">Easy</option>
-          <option value="medium" selected>Medium</option>
-          <option value="hard">Hard</option>
-          <option value="adaptive">Adaptive (AI decides)</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs mb-1 block" style="color:var(--muted)">Bloom's Level</label>
-        <select id="quiz-blooms" class="inp" style="cursor:pointer">
-          <option value="remember">Remember</option>
-          <option value="understand" selected>Understand</option>
-          <option value="apply">Apply</option>
-          <option value="analyze">Analyze</option>
-          <option value="evaluate">Evaluate</option>
-          <option value="create">Create</option>
-        </select>
-      </div>
-    </div>
-    <div id="quiz-container">
-      <div class="empty"><div class="empty-icon">📝</div><p class="font-bold mb-2">Ready to Practice?</p><p class="text-sm mb-4">Choose your subject and click Generate Quiz</p><button onclick="generateQuiz()" class="btn-primary px-6 py-3">✨ Generate AI Quiz</button></div>
-    </div>
-  </div>
-</section>
+<!-- WRITING LAB -->
+<section id="s-writing" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">✍️ Writing Lab</h2></div>
+<div class="p-3"><div class="flex gap-1.5 mb-3 flex-wrap">
+<button class="wt bp text-xs px-2 py-1" onclick="doWrite('improve')">✨ Improve</button>
+<button class="wt bg text-xs px-2 py-1" onclick="doWrite('thesis')">📌 Thesis</button>
+<button class="wt bg text-xs px-2 py-1" onclick="doWrite('paraphrase')">🔄 Paraphrase</button>
+<button class="wt bg text-xs px-2 py-1" onclick="doWrite('citation')">📝 Find Citations</button>
+<button class="wt bg text-xs px-2 py-1" onclick="doWrite('abstract')">📋 Abstract</button>
+<button class="wt bg text-xs px-2 py-1" onclick="doWrite('outline')">🗂️ Outline</button>
+</div>
+<textarea id="wl-tx" class="inp mb-2" rows="8" placeholder="Paste your academic writing here…"></textarea>
+<button class="bp w-full" onclick="doWrite()" id="wl-btn">✍️ Process →</button>
+<div id="write-res" class="mt-3"></div></div></section>
+
+<!-- PRESENTATION COACH -->
+<section id="s-present" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🎤 Presentation Coach</h2></div>
+<div class="p-3"><div class="cd p-4 mb-3"><h3 class="font-bold text-sm mb-2">Generate Slide Deck</h3>
+<input type="text" id="ps-t" class="inp mb-2" placeholder="Presentation topic"/>
+<input type="number" id="ps-n" class="inp mb-2" value="8" placeholder="Number of slides"/>
+<button class="bp w-full" onclick="genSlides()">🎨 Generate Slides →</button></div>
+<div id="slides-res" class="mt-3"></div></div></section>
+
+<!-- INTERVIEW PREP -->
+<section id="s-interview" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🎙️ Interview Prep</h2></div>
+<div class="p-3"><div class="cd p-4 mb-3">
+<input type="text" id="iv-r" class="inp mb-2" placeholder="Role: Software Engineer, Data Scientist…"/>
+<input type="text" id="iv-d" class="inp mb-2" placeholder="Domain: ML, Web Dev, Finance…"/>
+<select id="iv-t" class="inp mb-2"><option value="campus">Campus Placement</option><option value="job">Job Interview</option><option value="viva">Thesis/Viva</option><option value="scholarship">Scholarship</option><option value="admission">Graduate Admission</option></select>
+<button class="bp w-full" onclick="startInterview()">🎙️ Start Mock Interview →</button></div>
+<div id="iv-area"></div></div></section>
+
+<!-- DREAM PATH BUILDER -->
+<section id="s-dream" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🎯 Dream Path Builder</h2><p class="text-xs mt-1" style="color:var(--m)">Describe your dream career → AI builds the complete roadmap</p></div>
+<div class="p-3"><div class="cd p-4">
+<input type="text" id="dp-c" class="inp mb-2" placeholder="I want to become… (e.g. AI Researcher at Google DeepMind)"/>
+<input type="text" id="dp-s" class="inp mb-2" placeholder="Current skills (comma separated)"/>
+<select id="dp-l" class="inp mb-2"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>
+<button class="bp w-full" onclick="buildDream()" id="dp-btn">🎯 Build My Path →</button></div>
+<div id="dream-res" class="mt-3"></div></div></section>
+
+<!-- CONCEPT TIME MACHINE -->
+<section id="s-timeline" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">⏰ Concept Time Machine</h2><p class="text-xs mt-1" style="color:var(--m)">See how any concept evolved through history</p></div>
+<div class="p-3"><div class="cd p-4">
+<input type="text" id="ct-t" class="inp mb-2" placeholder="Topic: Atomic Structure, Evolution, Calculus…"/>
+<button class="bp w-full" onclick="buildTimeline()" id="ct-btn">⏰ Generate Timeline →</button></div>
+<div id="tl-res" class="mt-3"></div></div></section>
+
+<!-- AI LAB PARTNER -->
+<section id="s-lab" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🧪 AI Lab Partner</h2><p class="text-xs mt-1" style="color:var(--m)">Virtual lab simulations with AI as your lab partner</p></div>
+<div class="p-3"><div class="cd p-4">
+<input type="text" id="lb-e" class="inp mb-2" placeholder="Experiment: e.g. Determine focal length of convex lens"/>
+<select id="lb-s" class="inp mb-2"><option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Biology">Biology</option></select>
+<button class="bt w-full" onclick="runLab()" id="lb-btn">🧪 Simulate Experiment →</button></div>
+<div id="lab-res" class="mt-3"></div></div></section>
+
+<!-- LESSON GENERATOR (Educator) -->
+<section id="s-lesson" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">📖 AI Lesson Generator</h2><p class="text-xs mt-1" style="color:var(--m)">For educators — generate complete curriculum-aligned lessons</p></div>
+<div class="p-3"><div class="cd p-4">
+<input type="text" id="lg-cur" class="inp mb-2" placeholder="Curriculum: Periodic Classification of Elements"/>
+<div class="grid grid-cols-3 gap-2 mb-2"><input type="text" id="lg-g" class="inp" placeholder="Grade"/><select id="lg-b" class="inp"><option>CBSE</option><option>ICSE</option><option>State Board</option><option>IB</option><option>AP</option><option>Other</option></select><input type="text" id="lg-ch" class="inp" placeholder="Chapter"/></div>
+<button class="bw w-full" onclick="genLesson()" id="lg-btn">📖 Generate Lesson →</button></div>
+<div id="lesson-res" class="mt-3"></div></div></section>
 
 <!-- DOUBTS -->
-<section id="section-doubts" class="section" style="display:none">
-  <div class="section-header flex items-center justify-between">
-    <div>
-      <h2 class="text-lg font-bold">Doubt Resolution</h2>
-      <p class="text-xs mt-1" style="color:var(--muted)">AI resolves doubts instantly. Complex ones go to experts.</p>
-    </div>
-    <button onclick="openModal('ask-doubt')" class="btn-primary text-xs px-3 py-2">+ Ask Doubt</button>
-  </div>
-  <div id="doubts-list" class="divide-y" style="border-color:var(--border)">
-    <div class="empty"><div class="empty-icon">💡</div>Loading doubts…</div>
-  </div>
-</section>
+<section id="s-doubts" class="sec" style="display:none"><div class="sh flex items-center justify-between"><h2 class="text-base font-bold">❓ Doubts</h2><button onclick="openM('cd')" class="bt text-xs px-2 py-1.5">+ Ask</button></div>
+<div id="dbt-list" class="divide-y" style="border-color:var(--b)"><div class="ey"><div class="ei">❓</div>Loading…</div></div></section>
 
 <!-- COMMUNITY -->
-<section id="section-community" class="section" style="display:none">
-  <div class="section-header flex items-center justify-between">
-    <h2 class="text-lg font-bold">Community Feed</h2>
-    <button onclick="openModal('create-post')" class="btn-primary text-xs px-3 py-2">+ Post</button>
-  </div>
-  <div class="p-4 border-b" style="border-color:var(--border)">
-    <div class="flex gap-3">
-      <div id="feed-quick-avatar" class="avatar-placeholder" style="width:40px;height:40px;font-size:0.9rem;flex-shrink:0">?</div>
-      <button onclick="openModal('create-post')" class="flex-1 text-left px-4 py-3 rounded-xl text-sm cursor-pointer" style="background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--muted)">
-        Share a question, tip, or discussion…
-      </button>
-    </div>
-  </div>
-  <div id="feed-list" class="divide-y" style="border-color:var(--border)">
-    <div class="empty"><div class="empty-icon">📡</div>Loading feed…</div>
-  </div>
+<section id="s-community" class="sec" style="display:none"><div class="sh flex items-center justify-between"><h2 class="text-base font-bold">👥 Community</h2><button onclick="openM('cp')" class="bp text-xs px-2 py-1.5">+ Post</button></div>
+<div id="com-list" class="divide-y" style="border-color:var(--b)"><div class="ey"><div class="ei">👥</div>Loading…</div></div></section>
+
+<!-- STRESS COUNSELOR -->
+<section id="s-stress" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">💚 Exam Stress Counselor</h2><p class="text-xs mt-1" style="color:var(--m)">Personalized stress management, not generic advice</p></div>
+<div class="p-3"><div class="cd p-4">
+<textarea id="st-tx" class="inp mb-2" rows="4" placeholder="How are you feeling? What's worrying you about your exams?"></textarea>
+<input type="text" id="st-ctx" class="inp mb-2" placeholder="Exam context (optional): Physics final in 3 days…"/>
+<button class="bc w-full" onclick="stressHelp()">💚 Talk to Counselor →</button></div>
+<div id="stress-res" class="mt-3"></div></div></section>
+
+<!-- PARENT PORTAL -->
+<section id="s-parent" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">👨‍👩‍👧 Parent/Guardian Portal</h2></div>
+<div class="p-3"><div class="cd p-4 text-center">
+<div class="text-3xl mb-2">👨‍👩‍👧</div><p class="font-bold text-sm mb-2">Generate Weekly Progress Report</p>
+<p class="text-xs mb-3" style="color:var(--m)">AI creates a simple, non-technical report for parents</p>
+<button class="bw" onclick="genParentReport()">📊 Generate Report →</button></div>
+<div id="parent-res" class="mt-3"></div></div></section>
+
+<!-- ANALYTICS -->
+<section id="s-analytics" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">📊 Analytics Dashboard</h2></div>
+<div class="p-3">
+<div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+<div class="sc"><div class="sn gt" id="an-xp">0</div><div class="text-xs" style="color:var(--m)">Total XP</div></div>
+<div class="sc"><div class="sn" style="color:var(--a3)" id="an-str">0</div><div class="text-xs" style="color:var(--m)">Streak Days</div></div>
+<div class="sc"><div class="sn" style="color:var(--w)" id="an-quiz">0</div><div class="text-xs" style="color:var(--m)">Quizzes Done</div></div>
+<div class="sc"><div class="sn" style="color:var(--co)" id="an-study">0</div><div class="text-xs" style="color:var(--m)">Study Min</div></div>
+<div class="sc"><div class="sn" style="color:#4ade80" id="an-lv">1</div><div class="text-xs" style="color:var(--m)">Level</div></div>
+<div class="sc"><div class="sn" style="color:#c084fc" id="an-bloom">—</div><div class="text-xs" style="color:var(--m)">Bloom's Level</div></div>
+</div>
+<div class="cd p-4"><h3 class="font-bold text-sm mb-2">📈 Study Time Optimization</h3>
+<button class="bg text-xs" onclick="optimizeTime()">🤖 Analyze My Patterns →</button>
+<div id="optimize-res" class="mt-3"></div></div>
+</div></section>
+
+<!-- ═══ AI CONTENT STUDIO (Plumpedia-style) ═══ -->
+<section id="s-studio" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🎨 AI Content Studio</h2><p class="text-xs mt-1" style="color:var(--m)">Generate books, podcasts, video scripts, images — Plumpedia-style</p></div>
+<div class="flex gap-1.5 p-3 border-b" style="border-color:var(--b)">
+<button class="stb bp text-xs px-2 py-1" data-st="book" onclick="showST('book',this)">📚 Book</button>
+<button class="stb bg text-xs px-2 py-1" data-st="podcast" onclick="showST('podcast',this)">🎙️ Podcast</button>
+<button class="stb bg text-xs px-2 py-1" data-st="video" onclick="showST('video',this)">🎬 Video</button>
+<button class="stb bg text-xs px-2 py-1" data-st="image" onclick="showST('image',this)">🖼️ Image</button>
+</div>
+<!-- Book Generator -->
+<div id="st-book" class="p-3"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">📚 AI Book Generator</h3>
+<input type="text" id="bk-t" class="inp mb-2" placeholder="Topic: Quantum Physics for Beginners"/>
+<div class="grid grid-cols-3 gap-2 mb-2">
+<input type="number" id="bk-ch" class="inp" value="5" placeholder="Chapters"/>
+<select id="bk-aud" class="inp"><option value="k12">K-12</option><option value="college" selected>College</option><option value="professional">Professional</option><option value="general">General Public</option></select>
+<select id="bk-lang" class="inp"><option value="en">English</option><option value="hi">Hindi</option><option value="ta">Tamil</option><option value="te">Telugu</option></select>
+</div>
+<button class="bp w-full" onclick="genBook()" id="bk-btn">📚 Generate Book →</button></div><div id="book-res" class="mt-3"></div></div>
+<!-- Podcast Generator -->
+<div id="st-podcast" class="p-3" style="display:none"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">🎙️ AI Podcast Script Generator</h3>
+<input type="text" id="pd-t" class="inp mb-2" placeholder="Topic"/>
+<div class="grid grid-cols-3 gap-2 mb-2">
+<select id="pd-dur" class="inp"><option value="5 min">5 min</option><option value="10 min" selected>10 min</option><option value="20 min">20 min</option><option value="30 min">30 min</option></select>
+<select id="pd-style" class="inp"><option value="educational">Educational</option><option value="conversational">Conversational</option><option value="interview">Interview</option><option value="storytelling">Storytelling</option></select>
+<select id="pd-aud" class="inp"><option value="k12">K-12</option><option value="college" selected>College</option><option value="professional">Professional</option></select>
+</div>
+<button class="bt w-full" onclick="genPodcast()" id="pd-btn">🎙️ Generate Podcast →</button></div><div id="pod-res" class="mt-3"></div></div>
+<!-- Video Script Generator -->
+<div id="st-video" class="p-3" style="display:none"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">🎬 AI Video Script Generator</h3>
+<input type="text" id="vd-t" class="inp mb-2" placeholder="Topic"/>
+<div class="grid grid-cols-2 gap-2 mb-2">
+<select id="vd-dur" class="inp"><option value="3 min">3 min</option><option value="5 min" selected>5 min</option><option value="10 min">10 min</option></select>
+<select id="vd-aud" class="inp"><option value="k12">K-12</option><option value="college" selected>College</option><option value="professional">Professional</option></select>
+</div>
+<button class="bw w-full" onclick="genVideo()" id="vd-btn">🎬 Generate Script →</button></div><div id="vid-res" class="mt-3"></div></div>
+<!-- Image Generator -->
+<div id="st-image" class="p-3" style="display:none"><div class="cd p-4"><h3 class="font-bold text-sm mb-3">🖼️ AI Educational Image Generator</h3>
+<input type="text" id="ig-t" class="inp mb-2" placeholder="Topic: Cell Division, Solar System, Neural Network…"/>
+<select id="ig-style" class="inp mb-2"><option value="educational diagram">Educational Diagram</option><option value="infographic">Infographic</option><option value="scientific illustration">Scientific Illustration</option><option value="concept map">Concept Map</option><option value="cartoon explainer">Cartoon Explainer</option></select>
+<button class="bp w-full" onclick="genImagePrompts()" id="ig-btn">🖼️ Generate Image Prompts →</button>
+<p class="text-xs mt-2" style="color:var(--m)">Generates DALL·E prompts. With API key, creates actual images.</p></div><div id="img-res" class="mt-3"></div></div>
+</section>
+
+<!-- ═══ E-LIBRARY ═══ -->
+<section id="s-elibrary" class="sec" style="display:none"><div class="sh flex items-center justify-between"><h2 class="text-base font-bold">📖 E-Library</h2><button onclick="openM('addbook')" class="bp text-xs px-2 py-1.5">+ Add Book</button></div>
+<div class="flex gap-1.5 p-3 border-b overflow-x-auto" style="border-color:var(--b)">
+<button class="lcat bp text-xs px-2 py-1" data-lc="all" onclick="filterLib('all',this)">All</button>
+<button class="lcat bg text-xs px-2 py-1" data-lc="textbook" onclick="filterLib('textbook',this)">Textbooks</button>
+<button class="lcat bg text-xs px-2 py-1" data-lc="notes" onclick="filterLib('notes',this)">Notes</button>
+<button class="lcat bg text-xs px-2 py-1" data-lc="reference" onclick="filterLib('reference',this)">Reference</button>
+<button class="lcat bg text-xs px-2 py-1" data-lc="ai-generated" onclick="filterLib('ai-generated',this)">AI Generated</button>
+<button class="lcat bg text-xs px-2 py-1" data-lc="research" onclick="filterLib('research',this)">Research</button>
+</div>
+<div class="p-3">
+<input type="text" class="inp mb-3" placeholder="🔍 Search library…" oninput="searchLib(this.value)"/>
+<div id="lib-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+<div class="ey" style="grid-column:1/-1"><div class="ei">📚</div>Your library is empty<br/><button class="bp mt-2 text-xs px-3 py-1" onclick="openM('addbook')">Add First Book →</button><br/><button class="bt mt-2 text-xs px-3 py-1" onclick="S('studio')">Or Generate with AI →</button></div>
+</div></div></section>
+
+<!-- ═══ DISCUSSION FORUMS ═══ -->
+<section id="s-forums" class="sec" style="display:none"><div class="sh flex items-center justify-between"><h2 class="text-base font-bold">💬 Discussion Forums</h2><button onclick="openM('newthread')" class="bp text-xs px-2 py-1.5">+ New Thread</button></div>
+<div class="flex gap-1.5 p-3 border-b" style="border-color:var(--b)">
+<button class="ftb bp text-xs px-2 py-1" data-fc="all" onclick="filterForums('all',this)">All</button>
+<button class="ftb bg text-xs px-2 py-1" data-fc="general" onclick="filterForums('general',this)">General</button>
+<button class="ftb bg text-xs px-2 py-1" data-fc="help" onclick="filterForums('help',this)">Help</button>
+<button class="ftb bg text-xs px-2 py-1" data-fc="discuss" onclick="filterForums('discuss',this)">Discussion</button>
+<button class="ftb bg text-xs px-2 py-1" data-fc="resource" onclick="filterForums('resource',this)">Resources</button>
+</div>
+<div id="forum-list" class="divide-y" style="border-color:var(--b)"><div class="ey"><div class="ei">💬</div>Loading forums…</div></div></section>
+
+<!-- ═══ CERTIFICATES ═══ -->
+<section id="s-certs" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🏅 Certificates</h2><p class="text-xs mt-1" style="color:var(--m)">Earn certificates by completing courses and quizzes</p></div>
+<div class="p-3">
+<div class="cd p-4 mb-3"><h3 class="font-bold text-sm mb-3">Generate Certificate</h3>
+<input type="text" id="cert-course" class="inp mb-2" placeholder="Course / Subject name"/>
+<input type="number" id="cert-score" class="inp mb-2" placeholder="Score (0-100)" value="85" min="0" max="100"/>
+<button class="bw w-full" onclick="genCert()">🏅 Generate Certificate →</button></div>
+<div id="cert-display"></div>
+<h3 class="font-bold text-sm mb-3 mt-4">Your Certificates</h3>
+<div id="cert-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"><div class="ey" style="grid-column:1/-1"><div class="ei">🏅</div>Complete courses to earn certificates</div></div>
+</div></section>
+
+<!-- ═══ NOTIFICATIONS ═══ -->
+<section id="s-notifs" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🔔 Notifications</h2></div>
+<div id="notif-list" class="divide-y" style="border-color:var(--b)">
+<div class="p-3 border-b" style="border-color:var(--b)"><div class="flex gap-3"><div class="text-xl">🎉</div><div><p class="text-sm font-semibold">Welcome to NexGen Scholar!</p><p class="text-xs" style="color:var(--m)">Complete your cognitive profile to unlock personalized learning.</p><p class="text-xs mt-1" style="color:var(--a2)">Just now</p></div></div></div>
+<div class="p-3 border-b" style="border-color:var(--b)"><div class="flex gap-3"><div class="text-xl">🤖</div><div><p class="text-sm font-semibold">AI Tutor Ready</p><p class="text-xs" style="color:var(--m)">Your AI tutor has 3 modes: Socratic, Direct, and Deep Dive. Try them all!</p><p class="text-xs mt-1" style="color:var(--a2)">Just now</p></div></div></div>
+<div class="p-3"><div class="flex gap-3"><div class="text-xl">📚</div><div><p class="text-sm font-semibold">E-Library Available</p><p class="text-xs" style="color:var(--m)">Upload eBooks or generate AI books in the Content Studio.</p><p class="text-xs mt-1" style="color:var(--a2)">Just now</p></div></div></div>
+</div></section>
+
+<!-- ═══ ADMIN PANEL ═══ -->
+<section id="s-admin" class="sec" style="display:none"><div class="sh"><h2 class="text-base font-bold">🛡️ Admin Panel</h2><p class="text-xs mt-1" style="color:var(--m)">Platform management, user administration, content moderation</p></div>
+<div class="flex gap-1.5 p-3 border-b" style="border-color:var(--b)">
+<button class="adb bp text-xs px-2 py-1" data-ad="overview" onclick="showAD('overview',this)">📊 Overview</button>
+<button class="adb bg text-xs px-2 py-1" data-ad="users" onclick="showAD('users',this)">👥 Users</button>
+<button class="adb bg text-xs px-2 py-1" data-ad="content" onclick="showAD('content',this)">📝 Content</button>
+<button class="adb bg text-xs px-2 py-1" data-ad="settings" onclick="showAD('settings',this)">⚙️ Settings</button>
+<button class="adb bg text-xs px-2 py-1" data-ad="reports" onclick="showAD('reports',this)">📈 AI Reports</button>
+</div>
+<!-- Admin Overview -->
+<div id="ad-overview" class="p-3">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+<div class="sc"><div class="sn gt" id="adm-users">0</div><div class="text-xs" style="color:var(--m)">Total Users</div></div>
+<div class="sc"><div class="sn" style="color:var(--a3)" id="adm-posts">0</div><div class="text-xs" style="color:var(--m)">Posts</div></div>
+<div class="sc"><div class="sn" style="color:var(--w)" id="adm-courses">0</div><div class="text-xs" style="color:var(--m)">Courses</div></div>
+<div class="sc"><div class="sn" style="color:var(--co)" id="adm-doubts">0</div><div class="text-xs" style="color:var(--m)">Doubts</div></div>
+</div>
+<button class="bp text-xs" onclick="loadAdminStats()">🔄 Refresh Stats</button>
+<button class="bt text-xs ml-2" onclick="genAdminReport()">🤖 AI Report</button>
+<div id="admin-report" class="mt-3"></div>
+</div>
+<!-- Admin Users -->
+<div id="ad-users" class="p-3" style="display:none">
+<h3 class="font-bold text-sm mb-3">User Management</h3>
+<input type="text" class="inp mb-3" placeholder="🔍 Search users…" oninput="searchAdminUsers(this.value)"/>
+<div id="admin-users-list" class="divide-y cd" style="border-color:var(--b)"><div class="ey text-sm">Loading users…</div></div>
+</div>
+<!-- Admin Content -->
+<div id="ad-content" class="p-3" style="display:none">
+<h3 class="font-bold text-sm mb-3">Content Moderation</h3>
+<div id="admin-content-list" class="divide-y cd" style="border-color:var(--b)"><div class="ey text-sm">Loading content…</div></div>
+</div>
+<!-- Admin Settings -->
+<div id="ad-settings" class="p-3" style="display:none">
+<h3 class="font-bold text-sm mb-3">Platform Settings</h3>
+<div class="cd p-4">
+<div class="flex flex-col gap-3">
+<div><label class="text-xs mb-1 block" style="color:var(--m)">Platform Name</label><input type="text" class="inp" value="NexGen Scholar"/></div>
+<div><label class="text-xs mb-1 block" style="color:var(--m)">Default Language</label><select class="inp"><option>English</option><option>Hindi</option><option>Tamil</option></select></div>
+<div><label class="text-xs mb-1 block" style="color:var(--m)">Free Tier Daily AI Messages</label><input type="number" class="inp" value="20"/></div>
+<div><label class="text-xs mb-1 block" style="color:var(--m)">Max Upload Size (MB)</label><input type="number" class="inp" value="25"/></div>
+<div class="flex items-center gap-2"><input type="checkbox" checked id="adm-reg"/><label class="text-xs" for="adm-reg">Allow new registrations</label></div>
+<div class="flex items-center gap-2"><input type="checkbox" checked id="adm-ai"/><label class="text-xs" for="adm-ai">AI features enabled</label></div>
+<button class="bp text-xs px-4 py-2">Save Settings</button>
+</div></div></div>
+<!-- Admin AI Reports -->
+<div id="ad-reports" class="p-3" style="display:none">
+<h3 class="font-bold text-sm mb-3">AI-Generated Platform Reports</h3>
+<button class="bp text-xs" onclick="genAdminReport()">🤖 Generate Weekly Report →</button>
+<div id="admin-ai-report" class="mt-3"></div>
+</div>
 </section>
 
 <!-- PROFILE -->
-<section id="section-profile" class="section" style="display:none">
-  <div id="profile-content"><div class="empty"><div class="empty-icon">👤</div>Loading profile…</div></div>
-</section>
+<section id="s-profile" class="sec" style="display:none"><div id="pc"><div class="ey"><div class="ei">👤</div>Loading…</div></div></section>
 
-</div>
-</main>
+</div></main>
 
-<!-- MODALS -->
-
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
 <!-- Create Course -->
-<div class="overlay" id="modal-create-course">
-  <div class="modal-box">
-    <div class="flex items-center justify-between mb-5">
-      <h3 class="text-lg font-bold">Add Course</h3>
-      <button onclick="closeModal('create-course')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-    </div>
-    <div class="flex flex-col gap-3">
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Course Title *</label><input type="text" id="c-title" class="inp" placeholder="e.g. Advanced Calculus"/></div>
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Description *</label><textarea id="c-desc" class="inp" rows="3" placeholder="What will students learn?"></textarea></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Subject</label><select id="c-subject" class="inp" style="cursor:pointer"><option value="mathematics">Mathematics</option><option value="physics">Physics</option><option value="chemistry">Chemistry</option><option value="biology">Biology</option><option value="computer-science">Computer Science</option><option value="language">Language</option><option value="business">Business</option><option value="other">Other</option></select></div>
-        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Level</label><select id="c-level" class="inp" style="cursor:pointer"><option value="beginner">Beginner</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option></select></div>
-      </div>
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Topics (comma separated)</label><input type="text" id="c-topics" class="inp" placeholder="Differentiation, Integration, Limits…"/></div>
-      <div class="flex justify-end gap-3 mt-2">
-        <button class="btn-ghost" onclick="closeModal('create-course')">Cancel</button>
-        <button class="btn-primary" onclick="submitCourse()">Publish Course →</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Ask Doubt -->
-<div class="overlay" id="modal-ask-doubt">
-  <div class="modal-box">
-    <div class="flex items-center justify-between mb-5">
-      <h3 class="text-lg font-bold">Ask a Doubt</h3>
-      <button onclick="closeModal('ask-doubt')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-    </div>
-    <div class="flex flex-col gap-3">
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Your Question *</label><textarea id="d-question" class="inp" rows="4" placeholder="Describe your doubt clearly. The AI will try to resolve it instantly!"></textarea></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Subject</label><select id="d-subject" class="inp" style="cursor:pointer"><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>Computer Science</option><option>Other</option></select></div>
-        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Urgency</label><select id="d-urgency" class="inp" style="cursor:pointer"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High (Exam Soon)</option></select></div>
-      </div>
-      <div class="flex justify-end gap-3 mt-2">
-        <button class="btn-ghost" onclick="closeModal('ask-doubt')">Cancel</button>
-        <button class="btn-primary" onclick="submitDoubt()">Ask AI →</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<div class="ov" id="m-cc"><div class="mb"><div class="flex justify-between mb-4"><h3 class="font-bold">Create Course</h3><button onclick="closeM('cc')" class="text-gray-400 text-xl">&times;</button></div>
+<input type="text" id="cc-t" class="inp mb-2" placeholder="Title"/><textarea id="cc-d" class="inp mb-2" rows="2" placeholder="Description"></textarea>
+<div class="grid grid-cols-2 gap-2 mb-2"><select id="cc-c" class="inp"><option value="math">Math</option><option value="science">Science</option><option value="cs">CS</option><option value="language">Language</option><option value="other">Other</option></select><select id="cc-df" class="inp"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
+<input type="text" id="cc-tg" class="inp mb-3" placeholder="Tags"/><div class="flex justify-end gap-2"><button class="bg" onclick="closeM('cc')">Cancel</button><button class="bp" onclick="subCourse()">Publish →</button></div></div></div>
+<!-- Create Doubt -->
+<div class="ov" id="m-cd"><div class="mb"><div class="flex justify-between mb-4"><h3 class="font-bold">Ask Doubt</h3><button onclick="closeM('cd')" class="text-gray-400 text-xl">&times;</button></div>
+<input type="text" id="cd-t" class="inp mb-2" placeholder="Question"/><textarea id="cd-d" class="inp mb-2" rows="3" placeholder="Details"></textarea>
+<div class="grid grid-cols-2 gap-2 mb-3"><input type="text" id="cd-s" class="inp" placeholder="Subject"/><input type="text" id="cd-tp" class="inp" placeholder="Topic"/></div>
+<div class="flex justify-end gap-2"><button class="bg" onclick="closeM('cd')">Cancel</button><button class="bt" onclick="subDoubt()">Post →</button></div></div></div>
 <!-- Create Post -->
-<div class="overlay" id="modal-create-post">
-  <div class="modal-box">
-    <div class="flex items-center justify-between mb-5">
-      <h3 class="text-lg font-bold">Share with Community</h3>
-      <button onclick="closeModal('create-post')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-    </div>
-    <div class="flex flex-col gap-3">
-      <textarea id="post-content" class="inp" rows="4" placeholder="Share a tip, question, or learning update…"></textarea>
-      <input type="text" id="post-tags" class="inp" placeholder="Tags: mathematics, calculus, tips…"/>
-      <div class="flex justify-end gap-3 mt-2">
-        <button class="btn-ghost" onclick="closeModal('create-post')">Cancel</button>
-        <button class="btn-primary" onclick="submitPost()">Post →</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<div class="ov" id="m-cp"><div class="mb"><div class="flex justify-between mb-4"><h3 class="font-bold">Share</h3><button onclick="closeM('cp')" class="text-gray-400 text-xl">&times;</button></div>
+<textarea id="cp-c" class="inp mb-2" rows="3" placeholder="Share a tip, resource…"></textarea><input type="text" id="cp-tg" class="inp mb-3" placeholder="Tags"/>
+<div class="flex justify-end gap-2"><button class="bg" onclick="closeM('cp')">Cancel</button><button class="bp" onclick="subPost()">Post →</button></div></div></div>
 <!-- Edit Profile -->
-<div class="overlay" id="modal-edit-profile">
-  <div class="modal-box">
-    <div class="flex items-center justify-between mb-5">
-      <h3 class="text-lg font-bold">Edit Profile</h3>
-      <button onclick="closeModal('edit-profile')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-    </div>
-    <div class="flex flex-col gap-3">
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Display Name</label><input type="text" id="ep-name" class="inp" placeholder="Your full name"/></div>
-        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Role</label><select id="ep-role" class="inp" style="cursor:pointer"><option value="student">Student</option><option value="educator">Educator</option><option value="researcher">Researcher</option></select></div>
-      </div>
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Bio</label><textarea id="ep-bio" class="inp" rows="3" placeholder="Tell the community about yourself…"></textarea></div>
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Institution / University</label><input type="text" id="ep-institution" class="inp" placeholder="e.g. IIT Bombay, MIT…"/></div>
-      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Skills (comma separated)</label><input type="text" id="ep-skills" class="inp" placeholder="Machine Learning, Python, Calculus…"/></div>
-      <div class="flex justify-end gap-3 mt-2">
-        <button class="btn-ghost" onclick="closeModal('edit-profile')">Cancel</button>
-        <button class="btn-primary" onclick="saveProfile()">Save Profile →</button>
-      </div>
-    </div>
-  </div>
+<div class="ov" id="m-ep"><div class="mb"><div class="flex justify-between mb-4"><h3 class="font-bold">Edit Profile</h3><button onclick="closeM('ep')" class="text-gray-400 text-xl">&times;</button></div>
+<div class="grid grid-cols-2 gap-2 mb-2"><input type="text" id="ep-n" class="inp" placeholder="Name"/><select id="ep-r" class="inp"><option value="student">Student</option><option value="teacher">Teacher</option><option value="professional">Professional</option><option value="researcher">Researcher</option></select></div>
+<textarea id="ep-b" class="inp mb-2" rows="2" placeholder="Bio"></textarea><input type="text" id="ep-i" class="inp mb-2" placeholder="Institution"/><input type="text" id="ep-s" class="inp mb-2" placeholder="Subjects"/>
+<select id="ep-lang" class="inp mb-3"><option value="en">English</option><option value="hi">Hindi</option><option value="ta">Tamil</option><option value="te">Telugu</option><option value="bn">Bengali</option><option value="mr">Marathi</option><option value="kn">Kannada</option><option value="ml">Malayalam</option><option value="other">Other</option></select>
+<div class="flex justify-end gap-2"><button class="bg" onclick="closeM('ep')">Cancel</button><button class="bp" onclick="savePro()">Save →</button></div></div></div>
+
+<!-- Add Book to Library -->
+<div class="ov" id="m-addbook"><div class="mb"><div class="flex justify-between mb-4"><h3 class="font-bold">Add to E-Library</h3><button onclick="closeM('addbook')" class="text-gray-400 text-xl">&times;</button></div>
+<input type="text" id="lb-title" class="inp mb-2" placeholder="Book/Document Title"/>
+<input type="text" id="lb-author" class="inp mb-2" placeholder="Author"/>
+<textarea id="lb-desc" class="inp mb-2" rows="2" placeholder="Description"></textarea>
+<select id="lb-cat" class="inp mb-2"><option value="textbook">Textbook</option><option value="notes">Notes</option><option value="reference">Reference</option><option value="ai-generated">AI Generated</option><option value="research">Research Paper</option></select>
+<input type="text" id="lb-tags" class="inp mb-2" placeholder="Tags: Physics, CBSE, Class 12…"/>
+<input type="text" id="lb-url" class="inp mb-2" placeholder="URL or link (optional)"/>
+<textarea id="lb-content" class="inp mb-3" rows="3" placeholder="Paste content/summary (optional)"></textarea>
+<div class="flex justify-end gap-2"><button class="bg" onclick="closeM('addbook')">Cancel</button><button class="bp" onclick="addToLibrary()">Add to Library →</button></div></div></div>
+
+<!-- New Forum Thread -->
+<div class="ov" id="m-newthread"><div class="mb"><div class="flex justify-between mb-4"><h3 class="font-bold">New Discussion Thread</h3><button onclick="closeM('newthread')" class="text-gray-400 text-xl">&times;</button></div>
+<input type="text" id="ft-title" class="inp mb-2" placeholder="Thread title"/>
+<textarea id="ft-body" class="inp mb-2" rows="4" placeholder="Start the discussion…"></textarea>
+<div class="grid grid-cols-2 gap-2 mb-3">
+<select id="ft-cat" class="inp"><option value="general">General</option><option value="help">Help/Question</option><option value="discuss">Discussion</option><option value="resource">Resource Share</option></select>
+<input type="text" id="ft-tags" class="inp" placeholder="Tags"/>
 </div>
+<div class="flex justify-end gap-2"><button class="bg" onclick="closeM('newthread')">Cancel</button><button class="bp" onclick="createThread()">Post Thread →</button></div></div></div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div class="tst" id="tst"></div>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MAIN SCRIPT                                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
 <script>
-firebase.initializeApp(window.FIREBASE_CONFIG);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const FieldValue = firebase.firestore.FieldValue;
+const FC=window.APP_CONFIG?.firebase||{};firebase.initializeApp(FC);
+const auth=firebase.auth(),db=firebase.firestore(),FV=firebase.firestore.FieldValue;
+let U=null,UD=null,tutorMode='direct',ivRound=0,ivAnswers=[],writeTask='improve',debateRound=0;
 
-let currentUser = null;
-let currentUserData = null;
-let currentSection = "dashboard";
-let chatHistory = [];
-let tutorMode = "guide";
-let allCourses = [];
-let courseFilter = "all";
-
-auth.onAuthStateChanged(async user => {
-  if (!user) { window.location.href = "index.html"; return; }
-  currentUser = user;
-  const snap = await db.collection("users").doc(user.uid).get();
-  if (snap.exists) {
-    currentUserData = snap.data();
-  } else {
-    currentUserData = {
-      uid: user.uid, displayName: user.displayName || "Scholar",
-      email: user.email, photoURL: user.photoURL || "",
-      role: "student", bio: "", institution: "", skills: [],
-      studyStreak: 0, coursesEnrolled: 0, totalStudyTime: 0
-    };
-    await db.collection("users").doc(user.uid).set({...currentUserData, createdAt: FieldValue.serverTimestamp()});
-  }
-  updateNavUser();
-  document.getElementById("loading-screen").style.display = "none";
-  showSection("dashboard");
+// ── Auth ──
+auth.onAuthStateChanged(async u=>{if(!u){location.href='index.html';return}U=u;
+const s=await db.collection('users').doc(u.uid).get();
+UD=s.exists?s.data():{uid:u.uid,displayName:u.displayName||'Learner',email:u.email,photoURL:u.photoURL||'',bio:'',role:'student',institution:'',subjects:[],streakDays:0,quizzesCompleted:0,xp:0,level:1,totalStudyMinutes:0,bloomLevel:'understand',learningStyle:'visual',pace:'moderate',language:'en',profileComplete:false};
+if(!s.exists)await db.collection('users').doc(u.uid).set({...UD,createdAt:FV.serverTimestamp()});
+updNav();document.getElementById('ls').style.display='none';loadSec('dash');
+// Companion
+const hr=new Date().getHours();const g=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+const comp=await aiEngine.companionMessage(UD);
+document.getElementById('comp-msg').innerHTML=`<p class="text-sm">${g}, ${(UD.displayName||'').split(' ')[0]}! ${comp.message}</p>${comp.actionLabel?`<button class="bp text-xs mt-2 px-3 py-1" onclick="S('${comp.action==='start_quiz'?'assess':comp.action==='review_topic'?'tutor':'planner'}')">${comp.actionLabel}</button>`:''}`;
 });
 
-function updateNavUser() {
-  const name = currentUserData?.displayName || "Scholar";
-  document.getElementById("nav-name").textContent = name.split(" ")[0];
-  const initials = name.split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase();
-  document.getElementById("nav-avatar").textContent = initials;
-  document.getElementById("tutor-avatar").textContent = initials;
-  document.getElementById("feed-quick-avatar").textContent = initials;
-  document.getElementById("dash-name").textContent = name.split(" ")[0];
+function updNav(){const n=UD?.displayName||'Learner';document.getElementById('dn').textContent=n.split(' ')[0];
+const ini=n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+const av=document.getElementById('na');if(U?.photoURL)av.innerHTML=`<img src="${U.photoURL}" style="width:30px;height:30px;border-radius:50%;object-fit:cover"/>`;else av.textContent=ini;
+['nxv','rx','dx','an-xp'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=UD?.xp||0});
+['dstr','rstr','an-str'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=(UD?.streakDays||0)+(id.includes('r')?'d':'')});
+['dq','an-quiz'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=UD?.quizzesCompleted||0});
+['dlv','rlv','an-lv'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=UD?.level||1});
+const ane=document.getElementById('an-study');if(ane)ane.textContent=UD?.totalStudyMinutes||0;
+const anb=document.getElementById('an-bloom');if(anb)anb.textContent=UD?.bloomLevel||'—';
 }
+function S(n){document.querySelectorAll('.sec').forEach(s=>s.style.display='none');
+const el=document.getElementById(`s-${n}`);if(el)el.style.display='block';
+document.querySelectorAll('.ni').forEach(x=>x.classList.toggle('act',x.dataset.s===n));
+document.querySelectorAll('.bnb').forEach(x=>x.classList.toggle('act',x.dataset.s===n));
+loadSec(n)}
+function loadSec(n){if(n==='courses')loadCrs();if(n==='doubts')loadDbt();if(n==='community')loadCom();if(n==='profile')loadPro();if(n==='kmap')loadKM();if(n==='analytics')updNav()}
+function toast(m,t=''){const e=document.getElementById('tst');e.textContent=m;e.className=`tst show ${t}`;setTimeout(()=>e.classList.remove('show'),3000)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmt(s){return esc(s).replace(/\n/g,'<br/>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}
+function ago(ts){if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);const df=(Date.now()-d.getTime())/1000;if(df<60)return'now';if(df<3600)return Math.floor(df/60)+'m';if(df<86400)return Math.floor(df/3600)+'h';return Math.floor(df/86400)+'d'}
+function avH(u,sz=32){const nm=u?.displayName||u?.authorName||'U';const ini=nm.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();const ph=u?.photoURL||u?.authorPhoto||'';return ph?`<img src="${ph}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0"/>`:`<div class="av" style="width:${sz}px;height:${sz}px;font-size:${sz*0.35}px">${ini}</div>`}
+function addXP(n){if(!U||!UD)return;UD.xp=(UD.xp||0)+n;UD.level=Math.floor(UD.xp/100)+1;db.collection('users').doc(U.uid).update({xp:FV.increment(n),level:UD.level});updNav()}
+function openM(n){document.getElementById(`m-${n}`).classList.add('open')}
+function closeM(n){document.getElementById(`m-${n}`).classList.remove('open')}
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+async function doSignOut(){if(!confirm('Sign out?'))return;await auth.signOut();location.href='index.html'}
 
-function showSection(name) {
-  currentSection = name;
-  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
-  const sec = document.getElementById("section-" + name);
-  if (sec) sec.style.display = "block";
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.section === name));
-  document.querySelectorAll(".bnav-btn").forEach(n => n.classList.toggle("active", n.dataset.section === name));
-  if (name === "dashboard") loadDashboard();
-  if (name === "courses") loadCourses();
-  if (name === "doubts") loadDoubts();
-  if (name === "community") loadFeed();
-  if (name === "profile") loadProfile();
-}
+// ═══ AI TUTOR ═══
+function setTM(m,btn){tutorMode=m;document.querySelectorAll('.tm').forEach(b=>b.classList.remove('act'));btn.classList.add('act');addAI(`Switched to ${m} mode.`)}
+function sendC(){const inp=document.getElementById('ci');const m=inp.value.trim();if(!m)return;addU(m);inp.value='';addLoad();
+aiEngine.tutorChat(m,tutorMode,UD,UD?.language||'en').then(r=>{rmLoad();addAI(r);addXP(5)})}
+function qc(m){document.getElementById('ci').value=m;sendC()}
+function clearChat(){document.getElementById('cms').innerHTML='<div class="msg ma2"><p class="font-bold text-xs mb-1" style="color:var(--a2)">🤖 AI Tutor</p>Chat cleared! Ask me anything.</div>';aiEngine.clearHistory()}
+function addU(t){const el=document.getElementById('cms');el.innerHTML+=`<div class="msg mu">${esc(t)}</div>`;el.scrollTop=el.scrollHeight}
+function addAI(t){const el=document.getElementById('cms');rmLoad();el.innerHTML+=`<div class="msg ma2"><p class="font-bold text-xs mb-1" style="color:var(--a2)">🤖 AI Tutor</p>${fmt(t)}</div>`;el.scrollTop=el.scrollHeight}
+function addLoad(){const el=document.getElementById('cms');el.innerHTML+=`<div class="msg ma2 ld" style="opacity:0.5"><div class="spin" style="width:14px;height:14px;border:2px solid rgba(108,92,231,0.2);border-top-color:var(--a);border-radius:50%;display:inline-block"></div> Thinking…</div>`;el.scrollTop=el.scrollHeight}
+function rmLoad(){document.querySelectorAll('.ld').forEach(e=>e.remove())}
+// Voice
+let voiceOn=false;
+function toggleVoice(){voiceOn=!voiceOn;document.getElementById('vbtn').style.color=voiceOn?'var(--a)':'var(--m)';
+if(voiceOn&&'webkitSpeechRecognition' in window){const r=new webkitSpeechRecognition();r.continuous=false;r.onresult=e=>{const t=e.results[0][0].transcript;document.getElementById('ci').value=t;sendC()};r.start();toast('🎤 Listening…','ok')}else if(voiceOn){toast('Voice not supported in this browser','err')}}
+// Photo
+function uploadPhoto(inp){const f=inp.files[0];if(!f)return;const reader=new FileReader();reader.onload=e=>{const b64=e.target.result.split(',')[1];addU('[Uploaded photo for analysis]');addLoad();
+aiEngine.analyzeImage(b64,'Analyze this image and explain. If it contains equations, solve them. If it contains text, read and explain.').then(r=>{rmLoad();addAI(r);addXP(10)})};reader.readAsDataURL(f)}
+// Debate
+function startDebate(){debateRound=0;addAI("⚔️ **Debate Mode Activated!** State a topic and your position. I'll argue the opposite. We'll go 5 rounds. Let's sharpen your critical thinking!")}
 
-function toast(msg, type="") {
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.className = "toast show " + type;
-  setTimeout(() => t.classList.remove("show"), 3200);
-}
+// ═══ DOCUMENT LAB ═══
+async function processDoc(){const t=document.getElementById('dl-t').value.trim()||'Document';const tx=document.getElementById('dl-tx').value.trim();
+if(!tx)return toast('Paste text','err');btn('dl-btn',true);
+const r=await aiEngine.processDocument(tx,t);btn('dl-btn',false);
+const el=document.getElementById('doc-res');
+el.innerHTML=`<div class="rs"><h4>📋 Summary</h4><p class="text-sm" style="color:var(--m)">${esc(r.summary||'')}</p></div>
+<div class="rs"><h4>📖 Chapter Outline</h4>${(r.chapterOutline||[]).map((c,i)=>`<p class="text-sm mb-1"><strong>${i+1}.</strong> ${esc(c.title||c)}</p>`).join('')}</div>
+<div class="rs"><h4>📇 Key Definitions</h4>${(r.keyDefinitions||[]).map(d=>`<div class="mb-1"><span class="font-semibold text-sm" style="color:var(--a2)">${esc(d.term)}</span><span class="text-sm" style="color:var(--m)"> — ${esc(d.definition)}</span></div>`).join('')}</div>
+<div class="rs"><h4>🃏 Flashcards <span class="text-xs" style="color:var(--m)">(click to reveal)</span></h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${(r.flashcards||[]).map(f=>`<div class="p-2 rounded-lg cursor-pointer" style="background:rgba(108,92,231,0.08);border:1px solid rgba(108,92,231,0.2)" onclick="this.querySelector('.fb').style.display=this.querySelector('.fb').style.display==='none'?'block':'none'"><p class="text-sm font-semibold">${esc(f.front)}</p><p class="fb text-sm mt-1" style="display:none;color:var(--a3)">${esc(f.back)}</p></div>`).join('')}</div></div>
+<div class="rs"><h4>📝 MCQs</h4>${(r.mcqs||[]).map((q,i)=>`<div class="mb-2 p-2 rounded" style="background:rgba(255,255,255,0.02)"><p class="text-sm font-semibold">Q${i+1}. ${esc(q.q||q.question||'')}</p><div class="ml-3 mt-1">${(q.opts||q.options||[]).map((o,j)=>`<p class="text-xs ${j===(q.ans||q.correct)?'font-bold':''}${j===(q.ans||q.correct)?' style="color:var(--a3)"':''}">${esc(o)}</p>`).join('')}</div></div>`).join('')}</div>
+<div class="rs"><h4>🎯 Exam Tips</h4>${(r.examTips||[]).map(t=>`<p class="text-sm mb-1" style="color:var(--m)">• ${esc(t)}</p>`).join('')}</div>`;addXP(20)}
 
-function avatarHTML(user, size=40) {
-  const name = user?.displayName || user?.authorName || "U";
-  const initials = name.split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase();
-  const photo = user?.photoURL || user?.authorPhoto || "";
-  if (photo) return `<img src="${photo}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'"/>`;
-  return `<div class="avatar-placeholder" style="width:${size}px;height:${size}px;font-size:${size*0.35}px">${initials}</div>`;
-}
+// ═══ ASSESSMENTS ═══
+function showAT(t,btn){document.querySelectorAll('[id^="at-"]').forEach(e=>e.style.display='none');document.getElementById(`at-${t}`).style.display='block';document.querySelectorAll('.atb').forEach(b=>b.className=b.dataset.at===t?'atb bp text-xs px-2 py-1':'atb bg text-xs px-2 py-1')}
+async function genQuiz(){const t=document.getElementById('aq-t').value.trim();if(!t)return toast('Enter topic','err');btn('aq-btn',true);
+const r=await aiEngine.generateQuiz(t,parseInt(document.getElementById('aq-c').value)||5,document.getElementById('aq-d').value,document.getElementById('aq-b').value);btn('aq-btn',false);
+const el=document.getElementById('quiz-res');const qs=r.questions||[];
+let h=`<div class="rs"><h4>📝 Quiz: ${esc(t)} (${qs.length} Qs)</h4>`;
+qs.forEach((q,i)=>{h+=`<div class="mb-3 p-3 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid var(--b)"><div class="flex gap-2 mb-1"><span class="tg tp text-xs">${q.bloom||'?'}</span></div><p class="text-sm font-semibold mb-2">${esc(q.q||q.question||'')}</p><div class="flex flex-col gap-1" id="qo-${i}">${(q.opts||q.options||[]).map((o,j)=>`<button class="text-left p-2 rounded text-xs" style="background:rgba(255,255,255,0.04);border:1px solid var(--b2)" onclick="chkA(${i},${j},${q.ans!==undefined?q.ans:q.correct})">${esc(o)}</button>`).join('')}</div><div id="qe-${i}" class="mt-1" style="display:none"></div></div>`});
+h+=`</div>`;el.innerHTML=h;addXP(5)}
+function chkA(qi,sel,cor){const o=document.getElementById(`qo-${qi}`);if(!o)return;const bs=o.querySelectorAll('button');bs.forEach((b,j)=>{b.disabled=true;if(j===cor)b.style.background='rgba(34,197,94,0.2)',b.style.borderColor='#22c55e';else if(j===sel&&sel!==cor)b.style.background='rgba(239,68,68,0.2)',b.style.borderColor='#ef4444'});addXP(sel===cor?10:2)}
+async function gradeEssay(){const tx=document.getElementById('ae-tx').value.trim();if(!tx)return toast('Paste essay','err');btn('ae-btn',true);
+const r=await aiEngine.gradeEssay(tx,document.getElementById('ae-tp').value,document.getElementById('ae-rb').value);btn('ae-btn',false);
+document.getElementById('essay-res').innerHTML=`<div class="rs"><div class="flex justify-between mb-3"><h4>Essay Grade</h4><div class="text-2xl font-black gt">${r.score}/${r.maxScore}</div></div>
+<div class="grid grid-cols-2 gap-2 mb-3">${Object.entries(r.breakdown||{}).map(([k,v])=>`<div class="p-2 rounded" style="background:rgba(255,255,255,0.03)"><p class="text-xs font-bold capitalize">${k}</p><p class="text-lg font-bold" style="color:var(--a2)">${v.score}/${v.max}</p><p class="text-xs" style="color:var(--m)">${esc(v.feedback||'')}</p></div>`).join('')}</div>
+<p class="text-xs mb-1 font-bold" style="color:var(--a3)">Strengths:</p><p class="text-xs mb-2" style="color:var(--m)">${(r.strengths||[]).join(', ')}</p>
+<p class="text-xs mb-1 font-bold" style="color:var(--co)">Improve:</p><p class="text-xs" style="color:var(--m)">${(r.improvements||[]).join(', ')}</p></div>`;addXP(15)}
+async function genExam(){const sub=document.getElementById('ex-sub').value.trim();const top=document.getElementById('ex-top').value.trim();if(!sub||!top)return toast('Fill fields','err');btn('ex-btn',true);
+const r=await aiEngine.generateExam(sub,top.split(',').map(t=>t.trim()),{totalMarks:parseInt(document.getElementById('ex-marks').value)||100,duration:document.getElementById('ex-dur').value});btn('ex-btn',false);
+let h=`<div class="rs"><h4>📋 ${esc(r.title||sub+' Exam')}</h4><p class="text-xs mb-3" style="color:var(--m)">${r.totalMarks} marks · ${r.duration}</p>`;
+(r.sections||[]).forEach(s=>{h+=`<div class="mb-3"><p class="font-bold text-sm mb-2">${esc(s.name)} (${s.marks} marks)</p>`;
+(s.questions||[]).forEach((q,i)=>{h+=`<div class="p-2 mb-1 rounded text-xs" style="background:rgba(255,255,255,0.02)">${esc(q.q||'')}${q.opts?` [${q.opts.join(' | ')}]`:''}${q.marks?' ('+q.marks+'m)':''}</div>`});h+=`</div>`});
+h+=`</div>`;document.getElementById('exam-res').innerHTML=h;addXP(10)}
+async function predictScore(){const sub=document.getElementById('pr-sub').value.trim()||'General';
+const r=await aiEngine.predictScore([{topic:'Topic 1',score:70},{topic:'Topic 2',score:85}],sub);
+document.getElementById('predict-res').innerHTML=`<div class="rs"><h4>🔮 Predicted Score: ${sub}</h4>
+<div class="text-3xl font-black gt mb-2">${r.predicted?.likely||'?'}%</div>
+<p class="text-xs" style="color:var(--m)">Range: ${r.predicted?.low}-${r.predicted?.high}% (${r.confidence} confidence)</p>
+<p class="text-sm mt-2">${esc(r.studyPlan48hr||'')}</p>
+<p class="text-sm mt-2 font-semibold" style="color:var(--a3)">${esc(r.motivation||'')}</p></div>`}
 
-function timeAgo(ts) {
-  if (!ts) return "";
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  const diff = (Date.now() - d.getTime()) / 1000;
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-  return `${Math.floor(diff/86400)}d ago`;
-}
+// ═══ PRACTICE ARENA ═══
+async function genProblems(){const t=document.getElementById('pp-t').value.trim();if(!t)return toast('Enter topic','err');btn('pp-btn',true);
+const r=await aiEngine.generateProblems(t,parseInt(document.getElementById('pp-c').value)||5,document.getElementById('pp-d').value);btn('pp-btn',false);
+let h='';(r.problems||[]).forEach((p,i)=>{h+=`<div class="rs"><h4>Problem ${i+1}</h4><p class="text-sm mb-2">${esc(p.problem)}</p>
+<div class="flex gap-1 mb-2">${(p.hints||[]).map((hint,j)=>`<button class="act text-xs" onclick="this.textContent='💡 ${esc(hint).replace(/'/g,"\\'")}';this.disabled=true">💡 Hint ${j+1}</button>`).join('')}</div>
+<button class="bg text-xs" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Show Solution</button>
+<div style="display:none" class="mt-2 p-2 rounded" style="background:rgba(0,206,201,0.08)">${(p.solution?.steps||[]).map(s=>`<p class="text-xs mb-1">${esc(s)}</p>`).join('')}<p class="text-sm font-bold mt-1" style="color:var(--a3)">Answer: ${esc(p.solution?.finalAnswer||'')}</p></div></div>`});
+document.getElementById('prob-res').innerHTML=h;addXP(10)}
+async function analyzeErrors(){const r=await aiEngine.analyzeErrors([{topic:'Algebra',error:'sign error',count:5},{topic:'Calculus',error:'forgot constant',count:3}]);
+document.getElementById('error-res').innerHTML=`<div class="rs mt-3"><h4>🧬 Error DNA</h4>${(r.errorDNA||[]).map(e=>`<div class="p-2 mb-1 rounded" style="background:rgba(255,255,255,0.02)"><p class="text-sm font-semibold">${esc(e.pattern)}</p><p class="text-xs" style="color:var(--m)">Root cause: ${esc(e.rootCause||'')}</p><p class="text-xs" style="color:var(--a3)">Fix: ${esc(e.remediation||'')}</p></div>`).join('')}
+<p class="text-sm mt-2">${esc(r.motivationalInsight||'')}</p></div>`}
 
-function escHtml(str) {
-  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
+// ═══ STUDY PLANNER ═══
+async function genPlan(){const s=document.getElementById('sp-s').value.trim();if(!s)return toast('Enter subjects','err');btn('sp-btn',true);
+const r=await aiEngine.generateStudyPlan(s.split(',').map(x=>x.trim()),document.getElementById('sp-d').value||'2 weeks',parseInt(document.getElementById('sp-h').value)||4,(document.getElementById('sp-w').value||'').split(',').map(x=>x.trim()).filter(Boolean));btn('sp-btn',false);
+let h=`<div class="rs"><h4>${esc(r.title||'Study Plan')}</h4><p class="text-xs" style="color:var(--m)">${r.totalDays} days</p></div>`;
+(r.dailyPlans||[]).slice(0,7).forEach(d=>{h+=`<div class="rs"><p class="font-bold text-sm">Day ${d.day} <span class="text-xs font-normal" style="color:var(--m)">${d.date||''} · ${d.totalMin||0}min</span></p>`;
+(d.sessions||[]).forEach(s=>{const c={learn:'tp',revise:'tw',practice:'tt',test:'tc'}[s.type]||'tp';h+=`<div class="flex items-center gap-2 mt-1 p-1.5 rounded text-xs" style="background:rgba(255,255,255,0.02)"><span class="tg ${c}">${s.type}</span><span class="flex-1">${esc(s.subject)} — ${esc(s.topic)}</span><span style="color:var(--m)">${s.duration}min</span>${s.spacedRepetition?'<span class="tg tgn">🔄SR</span>':''}</div>`});h+=`</div>`});
+h+=`<div class="rs"><h4>💡 Tips</h4>${(r.tips||[]).map(t=>`<p class="text-xs mb-1">• ${esc(t)}</p>`).join('')}</div>`;
+document.getElementById('plan-res').innerHTML=h;addXP(10)}
 
-async function loadDashboard() {
-  if (!currentUser) return;
-  const snap = await db.collection("users").doc(currentUser.uid).get();
-  if (snap.exists) currentUserData = snap.data();
-  document.getElementById("stat-courses").textContent = currentUserData?.coursesEnrolled || 0;
-  document.getElementById("stat-streak").textContent = currentUserData?.studyStreak || 0;
-  document.getElementById("stat-time").textContent = (currentUserData?.totalStudyTime || 0) + "h";
-  document.getElementById("stat-score").textContent = (currentUserData?.avgScore || 0) + "%";
-  document.getElementById("streak-display").textContent = (currentUserData?.studyStreak || 0) + " 🔥";
-}
+// ═══ KNOWLEDGE MAP ═══
+function loadKM(){const el=document.getElementById('km-grid');const subs=UD?.subjects?.length?UD.subjects:['Mathematics','Physics','Chemistry','Biology','Computer Science','English'];
+el.innerHTML='';subs.forEach(s=>{const m=Math.floor(Math.random()*100);const c=m>80?'#8b5cf6':m>50?'#22c55e':m>25?'#eab308':'#ef4444';const l=m>80?'Mastered':m>50?'Strong':m>25?'Developing':'Weak';
+el.innerHTML+=`<div class="cd p-3"><div class="flex justify-between mb-1"><span class="font-bold text-xs">${esc(s)}</span><span class="text-xs font-bold" style="color:${c}">${l}</span></div><div class="pb"><div class="pf" style="width:${m}%;background:${c}"></div></div><p class="text-xs mt-1" style="color:var(--m)">${m}%</p></div>`})}
 
-async function loadCourses() {
-  const el = document.getElementById("courses-list");
-  try {
-    const snap = await db.collection("courses").orderBy("createdAt","desc").limit(30).get();
-    allCourses = snap.docs.map(d => ({id:d.id,...d.data()}));
-    renderCourses();
-  } catch(e) { el.innerHTML = `<div class="empty text-red-400">Error: ${e.message}</div>`; }
-}
+// ═══ RESEARCH PARTNER ═══
+function showRT(t,btn){document.querySelectorAll('[id^="rt-"]').forEach(e=>e.style.display='none');document.getElementById(`rt-${t}`).style.display='block';document.querySelectorAll('.rtb').forEach(b=>b.className=b.dataset.rt===t?'rtb bp text-xs px-2 py-1':'rtb bg text-xs px-2 py-1')}
+async function summarizePaper(){const tx=document.getElementById('rp-tx').value.trim();if(!tx)return toast('Paste paper','err');
+const r=await aiEngine.summarizePaper(tx);document.getElementById('paper-res').innerHTML=`<div class="rs"><h4>${esc(r.title||'Paper')}</h4><p class="text-sm mb-2">${esc(r.threeLineSummary||'')}</p><p class="text-xs mb-1 font-bold">Key Findings:</p>${(r.keyFindings||[]).map(f=>`<p class="text-xs">• ${esc(f)}</p>`).join('')}<p class="text-xs mt-2 mb-1 font-bold">Limitations:</p>${(r.limitations||[]).map(f=>`<p class="text-xs">• ${esc(f)}</p>`).join('')}</div>`;addXP(15)}
+async function suggestMethod(){const q=document.getElementById('rm-q').value.trim();if(!q)return toast('Enter question','err');
+const r=await aiEngine.suggestMethodology(q);document.getElementById('method-res').innerHTML=`<div class="rs"><h4>🔬 Recommended: ${esc(r.approach||'')}</h4><p class="text-sm mb-2">${esc(r.justification||'')}</p>${(r.methods||[]).map(m=>`<div class="p-2 rounded mb-1" style="background:rgba(255,255,255,0.02)"><p class="text-sm font-bold">${esc(m.name)}</p><p class="text-xs" style="color:var(--m)">${esc(m.description||'')}</p></div>`).join('')}${(r.hypotheses||[]).map(h=>`<p class="text-xs mt-1"><span class="tg tp">H</span> ${esc(h.h||h)}</p>`).join('')}</div>`}
+async function genCitation(){const s=document.getElementById('rc-s').value.trim();if(!s)return toast('Enter source','err');
+const r=await aiEngine.generateCitation(s,document.getElementById('rc-st').value);document.getElementById('cite-res').innerHTML=`<div class="rs"><h4>📝 Citation</h4><p class="text-sm" style="white-space:pre-wrap">${fmt(r)}</p></div>`}
+async function genLitReview(){const t=document.getElementById('rl-t').value.trim();const p=document.getElementById('rl-p').value.trim();if(!t)return toast('Enter topic','err');
+const r=await aiEngine.generateLitReview(p,t);document.getElementById('lit-res').innerHTML=`<div class="rs"><h4>📚 Literature Review</h4><div class="text-sm" style="line-height:1.7">${fmt(r)}</div></div>`;addXP(20)}
 
-function filterCourses(f) {
-  courseFilter = f;
-  document.querySelectorAll(".filter-btn").forEach(b => {
-    b.className = b.dataset.filter === f ? "filter-btn btn-primary text-xs px-3 py-1" : "filter-btn btn-ghost text-xs px-3 py-1";
-  });
-  renderCourses();
-}
+// ═══ WRITING LAB ═══
+async function doWrite(task){writeTask=task||writeTask;const tx=document.getElementById('wl-tx').value.trim();if(!tx)return toast('Paste text','err');btn('wl-btn',true);
+const r=await aiEngine.writingAssist(tx,writeTask);btn('wl-btn',false);
+document.getElementById('write-res').innerHTML=`<div class="rs"><h4>✍️ ${writeTask.charAt(0).toUpperCase()+writeTask.slice(1)}</h4><div class="text-sm" style="line-height:1.7">${fmt(r)}</div></div>`;addXP(10)}
 
-function renderCourses() {
-  const el = document.getElementById("courses-list");
-  const filtered = courseFilter === "all" ? allCourses : allCourses.filter(c => c.subject === courseFilter);
-  if (!filtered.length) {
-    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><p class="font-bold mb-2">No courses yet</p><button class="btn-primary mt-3 px-4 py-2 text-sm" onclick="openModal('create-course')">Add First Course →</button></div>`;
-    return;
-  }
-  el.innerHTML = "";
-  filtered.forEach(c => el.appendChild(buildCourseCard(c)));
-}
+// ═══ PRESENTATION COACH ═══
+async function genSlides(){const t=document.getElementById('ps-t').value.trim();if(!t)return toast('Enter topic','err');
+const r=await aiEngine.generatePresentation(t,parseInt(document.getElementById('ps-n').value)||8);
+let h=`<div class="rs"><h4>🎤 ${esc(r.title||t)}</h4><p class="text-xs mb-3" style="color:var(--m)">${r.estimatedDuration||''}</p>`;
+(r.slides||[]).forEach(s=>{h+=`<div class="p-3 mb-2 rounded-lg" style="background:rgba(108,92,231,0.06);border:1px solid rgba(108,92,231,0.15)"><p class="font-bold text-sm mb-1">Slide ${s.slideNum}: ${esc(s.title)}</p>${(s.bulletPoints||[]).map(b=>`<p class="text-xs">• ${esc(b)}</p>`).join('')}<p class="text-xs mt-1" style="color:var(--a3)">🎤 ${esc(s.speakerNotes||'')}</p></div>`});
+h+=`</div>`;document.getElementById('slides-res').innerHTML=h;addXP(15)}
 
-function buildCourseCard(c) {
-  const div = document.createElement("div");
-  div.className = "card card-hover course-card";
-  const topics = (c.topics||[]).slice(0,3).map(t=>`<span class="tech-tag">${t}</span>`).join("");
-  const levelColor = {beginner:"badge-green",intermediate:"badge-blue",advanced:"badge-red"}[c.level]||"badge-blue";
-  div.innerHTML = `
-    <div class="flex items-start justify-between gap-3 mb-3">
-      <div>
-        <h3 class="font-bold text-base leading-tight">${escHtml(c.title||"")}</h3>
-        <div class="flex items-center gap-2 mt-1">
-          ${avatarHTML(c,20)}
-          <span class="text-xs" style="color:var(--muted)">${c.authorName||""} · ${timeAgo(c.createdAt)}</span>
-        </div>
-      </div>
-      <span class="badge ${levelColor}">${c.level||"course"}</span>
-    </div>
-    <p class="text-sm mb-3" style="color:#9CA3AF;line-height:1.6">${escHtml((c.description||"").slice(0,150))}${(c.description||"").length>150?"&hellip;":""}</p>
-    <div class="mb-3">${topics}</div>
-    <div class="flex gap-2 flex-wrap">
-      <button onclick="enrollCourse('${c.id}')" class="btn-primary text-xs px-3 py-2">→ Enroll</button>
-      <button onclick="askAboutCourse('${c.id}')" class="btn-ghost text-xs px-3 py-2">🤖 Ask AI</button>
-      ${c.authorId===currentUser?.uid?`<button onclick="deleteCourse('${c.id}')" class="action-btn text-red-400 text-xs ml-auto">Delete</button>`:""}
-    </div>`;
-  return div;
-}
+// ═══ INTERVIEW PREP ═══
+async function startInterview(){ivRound=0;ivAnswers=[];nextIvQ()}
+async function nextIvQ(){ivRound++;const r=document.getElementById('iv-r').value||'Software Engineer';const d=document.getElementById('iv-d').value||'General';
+const q=await aiEngine.interviewQuestion(r,d,ivRound,ivAnswers);
+document.getElementById('iv-area').innerHTML=`<div class="rs"><div class="flex justify-between"><span class="tg tp">Round ${ivRound}</span><span class="tg ${q.difficulty==='hard'?'tc':q.difficulty==='easy'?'tgn':'tw'}">${q.difficulty}</span></div>
+<p class="text-sm font-bold mt-2 mb-3">${esc(q.question)}</p><p class="text-xs mb-3" style="color:var(--m)">💡 ${esc(q.followUpHint||'')}</p>
+<textarea id="iv-ans" class="inp mb-2" rows="4" placeholder="Your answer…"></textarea>
+<div class="flex gap-2"><button class="bp" onclick="submitIvAns('${esc(q.question).replace(/'/g,"\\'")}')">Submit Answer</button><button class="bg" onclick="nextIvQ()">Skip →</button></div></div>`}
+async function submitIvAns(q){const a=document.getElementById('iv-ans').value.trim();if(!a)return;
+const r=await aiEngine.evaluateAnswer(q,a,document.getElementById('iv-r').value);ivAnswers.push({q,a,score:r.score});
+document.getElementById('iv-area').innerHTML+=`<div class="rs"><h4>Feedback: ${r.score}/${r.maxScore}</h4><p class="text-sm mb-1">${esc(r.contentStrength||'')}</p><p class="text-xs mb-1" style="color:var(--co)">Improve: ${(r.improvements||[]).join(', ')}</p>
+${r.betterAnswer?`<p class="text-xs mt-1" style="color:var(--a3)">Better: ${esc(r.betterAnswer)}</p>`:''}
+<button class="bp mt-2 text-xs px-3 py-1" onclick="nextIvQ()">Next Question →</button></div>`;addXP(10)}
 
-async function enrollCourse(courseId) {
-  if (!currentUser) return;
-  const course = allCourses.find(c => c.id === courseId);
-  if (!course) return;
-  try {
-    await db.collection("enrollments").add({
-      userId: currentUser.uid,
-      courseId: courseId,
-      courseTitle: course.title,
-      progress: 0,
-      enrolledAt: FieldValue.serverTimestamp()
-    });
-    await db.collection("users").doc(currentUser.uid).update({ coursesEnrolled: FieldValue.increment(1) });
-    toast("🎉 Enrolled in " + course.title + "!", "success");
-  } catch(e) { toast("Error: " + e.message, "error"); }
-}
+// ═══ DREAM PATH ═══
+async function buildDream(){const c=document.getElementById('dp-c').value.trim();if(!c)return toast('Enter career goal','err');btn('dp-btn',true);
+const r=await aiEngine.buildDreamPath(c,(document.getElementById('dp-s').value||'').split(',').map(x=>x.trim()),document.getElementById('dp-l').value);btn('dp-btn',false);
+let h=`<div class="rs"><h4>🎯 ${esc(r.careerGoal||c)}</h4><p class="text-sm mb-2">Timeline: ${esc(r.timeline||'')}</p><p class="text-xs mb-3" style="color:var(--m)">Gap: ${esc(r.currentGap||'')}</p>`;
+(r.phases||[]).forEach(p=>{h+=`<div class="p-3 mb-2 rounded-lg" style="background:rgba(255,255,255,0.02);border-left:3px solid var(--a)"><p class="font-bold text-sm">Phase ${p.phase}: ${esc(p.title)} <span class="text-xs font-normal" style="color:var(--m)">(${p.duration})</span></p>
+<p class="text-xs mt-1">📚 ${(p.courses||[]).join(', ')}</p><p class="text-xs">🛠️ ${(p.skills||[]).join(', ')}</p><p class="text-xs">🏆 ${(p.milestones||[]).join(', ')}</p></div>`});
+h+=`<p class="text-sm mt-2 font-semibold" style="color:var(--a3)">💡 ${esc(r.keyAdvice||'')}</p></div>`;
+document.getElementById('dream-res').innerHTML=h;addXP(15)}
 
-async function askAboutCourse(courseId) {
-  const course = allCourses.find(c => c.id === courseId);
-  if (!course) return;
-  showSection("ai-tutor");
-  document.getElementById("tutor-input").value = "Tell me about the course: " + course.title + ". What topics does it cover and how should I approach learning it?";
-}
+// ═══ CONCEPT TIME MACHINE ═══
+async function buildTimeline(){const t=document.getElementById('ct-t').value.trim();if(!t)return toast('Enter topic','err');btn('ct-btn',true);
+const r=await aiEngine.conceptTimeline(t);btn('ct-btn',false);
+let h=`<div class="rs"><h4>⏰ ${esc(r.topic||t)}</h4>`;
+(r.timeline||[]).forEach(e=>{h+=`<div class="flex gap-3 mb-2"><div class="font-bold text-sm" style="min-width:50px;color:${e.paradigmShift?'var(--a3)':'var(--m)'}">${e.year}</div><div><p class="text-sm font-semibold">${esc(e.event)}${e.paradigmShift?' 🔄':''}</p><p class="text-xs" style="color:var(--m)">${esc(e.significance)} — ${esc(e.keyPerson||'')}</p></div></div>`});
+h+=`<p class="text-sm mt-2"><strong>Current:</strong> ${esc(r.currentUnderstanding||'')}</p><p class="text-xs mt-1" style="color:var(--a3)">🔮 ${esc(r.futureDirections||'')}</p><p class="text-xs mt-1">💡 ${esc(r.funFact||'')}</p></div>`;
+document.getElementById('tl-res').innerHTML=h;addXP(10)}
 
-async function deleteCourse(id) {
-  if (!confirm("Delete this course?")) return;
-  await db.collection("courses").doc(id).delete();
-  toast("Course deleted"); loadCourses();
-}
+// ═══ LAB PARTNER ═══
+async function runLab(){const e=document.getElementById('lb-e').value.trim();if(!e)return toast('Enter experiment','err');btn('lb-btn',true);
+const r=await aiEngine.labSimulation(e,document.getElementById('lb-s').value);btn('lb-btn',false);
+let h=`<div class="rs"><h4>🧪 ${esc(r.experimentTitle||e)}</h4><p class="text-sm mb-2">${esc(r.objective||'')}</p>
+<p class="text-xs font-bold mb-1">Apparatus:</p><p class="text-xs mb-2" style="color:var(--m)">${(r.apparatus||[]).join(', ')}</p>
+<p class="text-xs font-bold mb-1">Procedure:</p>${(r.procedure||[]).map((s,i)=>`<p class="text-xs mb-1">${i+1}. ${esc(s)}</p>`).join('')}
+<p class="text-xs font-bold mt-2 mb-1">Expected Observations:</p>${(r.expectedObservations||[]).map(o=>`<p class="text-xs">• ${esc(o)}</p>`).join('')}
+<p class="text-sm mt-2"><strong>Result:</strong> ${esc(r.result||'')}</p><p class="text-sm"><strong>Conclusion:</strong> ${esc(r.conclusion||'')}</p>
+${(r.vivaQuestions||[]).length?`<p class="text-xs font-bold mt-2 mb-1">Viva Questions:</p>${r.vivaQuestions.map(v=>`<p class="text-xs">Q: ${esc(v.q)}</p><p class="text-xs mb-1" style="color:var(--a3)">A: ${esc(v.a)}</p>`).join('')}`:''}</div>`;
+document.getElementById('lab-res').innerHTML=h;addXP(15)}
 
-async function submitCourse() {
-  const title = document.getElementById("c-title").value.trim();
-  const desc = document.getElementById("c-desc").value.trim();
-  const subject = document.getElementById("c-subject").value;
-  const level = document.getElementById("c-level").value;
-  const topicsRaw = document.getElementById("c-topics").value.trim();
-  if (!title || !desc) return toast("Title and description required", "error");
-  const topics = topicsRaw ? topicsRaw.split(",").map(t=>t.trim()).filter(Boolean) : [];
-  try {
-    await db.collection("courses").add({
-      authorId: currentUser.uid,
-      authorName: currentUserData?.displayName || "Educator",
-      authorPhoto: currentUser.photoURL || "",
-      title, description: desc, subject, level, topics,
-      enrolledCount: 0, rating: 0,
-      createdAt: FieldValue.serverTimestamp()
-    });
-    closeModal("create-course");
-    ["c-title","c-desc","c-topics"].forEach(id => document.getElementById(id).value="");
-    toast("📚 Course published!", "success");
-    loadCourses();
-  } catch(e) { toast("Error: " + e.message, "error"); }
-}
+// ═══ LESSON GENERATOR ═══
+async function genLesson(){const cur=document.getElementById('lg-cur').value.trim();if(!cur)return toast('Enter curriculum','err');btn('lg-btn',true);
+const r=await aiEngine.generateLesson(cur,document.getElementById('lg-g').value||'10',document.getElementById('lg-ch').value||cur,document.getElementById('lg-b').value);btn('lg-btn',false);
+let h=`<div class="rs"><h4>📖 ${esc(r.lessonTitle||cur)}</h4><p class="text-xs" style="color:var(--m)">${r.grade||''} · ${r.board||''} · ${r.duration||''}</p>
+<p class="text-xs font-bold mt-2 mb-1">Objectives:</p>${(r.objectives||[]).map(o=>`<p class="text-xs">✓ ${esc(o)}</p>`).join('')}
+<p class="text-xs font-bold mt-2 mb-1">Warm-Up (${r.warmUp?.duration||''}):</p><p class="text-xs">${esc(r.warmUp?.activity||'')}</p>
+<p class="text-xs font-bold mt-2 mb-1">Main Lesson (3 levels):</p>
+<div class="p-2 rounded mb-1" style="background:rgba(34,197,94,0.08)"><p class="text-xs font-bold">Beginner:</p><p class="text-xs">${esc(r.mainLesson?.beginner||'')}</p></div>
+<div class="p-2 rounded mb-1" style="background:rgba(253,203,110,0.08)"><p class="text-xs font-bold">Intermediate:</p><p class="text-xs">${esc(r.mainLesson?.intermediate||'')}</p></div>
+<div class="p-2 rounded mb-1" style="background:rgba(225,112,85,0.08)"><p class="text-xs font-bold">Advanced:</p><p class="text-xs">${esc(r.mainLesson?.advanced||'')}</p></div>
+<p class="text-xs font-bold mt-2 mb-1">Homework:</p><p class="text-xs">${esc(r.homework||'')}</p>
+<p class="text-xs font-bold mt-2 mb-1">Teacher Notes:</p><p class="text-xs" style="color:var(--m)">${esc(r.teacherNotes||'')}</p>
+${r.bloomQuestions?`<p class="text-xs font-bold mt-2 mb-1">Bloom's Questions:</p>${Object.entries(r.bloomQuestions).map(([k,v])=>`<p class="text-xs"><span class="tg tp">${k}</span> ${(v||[]).map(q=>esc(q)).join('; ')}</p>`).join('')}`:''}
+</div>`;document.getElementById('lesson-res').innerHTML=h;addXP(20)}
 
-function setTutorMode(mode) {
-  tutorMode = mode;
-  document.querySelectorAll(".tutor-mode-btn").forEach(b => {
-    b.className = b.dataset.mode === mode ? "tutor-mode-btn btn-primary text-xs px-3 py-2" : "tutor-mode-btn btn-ghost text-xs px-3 py-2";
-  });
-}
+// ═══ STRESS COUNSELOR ═══
+async function stressHelp(){const tx=document.getElementById('st-tx').value.trim();if(!tx)return toast('Tell me how you feel','err');
+const r=await aiEngine.stressCounseling(tx,document.getElementById('st-ctx').value);
+document.getElementById('stress-res').innerHTML=`<div class="rs" style="border-color:rgba(34,197,94,0.3)"><h4>💚 Counselor</h4><div class="text-sm" style="line-height:1.7">${fmt(r)}</div></div>`}
 
-function quickPrompt(text) {
-  document.getElementById("tutor-input").value = text;
-  document.getElementById("tutor-input").focus();
-}
+// ═══ PARENT REPORT ═══
+async function genParentReport(){const r=await aiEngine.generateParentReport({name:UD?.displayName||'Student',subjects:UD?.subjects||['Math','Science'],xp:UD?.xp||0,streak:UD?.streakDays||0,quizzes:UD?.quizzesCompleted||0,level:UD?.level||1});
+document.getElementById('parent-res').innerHTML=`<div class="rs" style="border-color:rgba(253,203,110,0.3)"><h4>👨‍👩‍👧 Weekly Report</h4><div class="text-sm" style="line-height:1.7">${fmt(r)}</div></div>`}
 
-function addMessage(role, content) {
-  const chat = document.getElementById("chat-messages");
-  const div = document.createElement("div");
-  div.className = "flex gap-3";
-  const isAI = role === "assistant";
-  const avatarContent = isAI ? "🤖" : (currentUserData?.displayName||"U").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase();
-  div.innerHTML = `
-    <div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;${isAI?"background:var(--primary)":""}">${avatarContent}</div>
-    <div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:#D1D5DB;line-height:1.7;max-width:85%;white-space:pre-wrap">${escHtml(content)}</div>`;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-  chatHistory.push({role, content});
-}
+// ═══ ANALYTICS ═══
+async function optimizeTime(){const r=await aiEngine.optimizeStudyTime([{day:'Mon',minutes:90,subject:'Math',score:80},{day:'Tue',minutes:60,subject:'Physics',score:70}]);
+document.getElementById('optimize-res').innerHTML=`<div class="rs mt-2"><h4>📈 Your Optimal Pattern</h4><p class="text-sm">Best time: <strong>${r.bestTime}</strong></p><p class="text-sm">Optimal session: <strong>${r.optimalSessionLength} min</strong></p>${(r.recommendations||[]).map(t=>`<p class="text-xs mt-1">• ${esc(t)}</p>`).join('')}</div>`}
 
-async function sendTutorMessage() {
-  const input = document.getElementById("tutor-input");
-  const msg = input.value.trim();
-  if (!msg) return;
-  addMessage("user", msg);
-  input.value = "";
-  const modePrompts = {
-    guide: "You are a Socratic AI tutor. Guide the student to discover answers through questions rather than giving direct answers. Be encouraging and personalized.",
-    explain: "You are an expert AI tutor. Explain concepts clearly with examples, analogies, and structured breakdowns. Adapt your language to the student's level.",
-    solve: "You are an AI tutor. Provide detailed step-by-step solutions with explanations for each step. Show your work clearly."
-  };
-  const systemPrompt = modePrompts[tutorMode] || modePrompts.explain;
-  const thinkingDiv = document.createElement("div");
-  thinkingDiv.className = "flex gap-3";
-  thinkingDiv.innerHTML = `<div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;background:var(--primary)">🤖</div><div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:var(--muted)">Thinking…</div>`;
-  document.getElementById("chat-messages").appendChild(thinkingDiv);
-  try {
-    const apiKey = (typeof OPENAI_API_KEY !== "undefined") ? OPENAI_API_KEY : null;
-    if (!apiKey) {
-      thinkingDiv.remove();
-      addMessage("assistant", "I need an OpenAI API key to respond. Please add your OPENAI_API_KEY in the app settings.\n\nFor now, here's a demo response:\n\nGreat question! I'm your AI tutor and I'm here to help you learn. Once you configure your OpenAI API key, I'll be able to:\n• Give personalized explanations\n• Quiz you adaptively\n• Solve problems step-by-step\n• Remember our entire conversation history");
-      return;
-    }
-    const messages = [{role:"system",content:systemPrompt},...chatHistory.slice(-10).map(m=>({role:m.role,content:m.content})),{role:"user",content:msg}];
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
-      body: JSON.stringify({model:"gpt-4o",messages,temperature:0.7,max_tokens:800})
-    });
-    const data = await resp.json();
-    thinkingDiv.remove();
-    const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response.";
-    addMessage("assistant", reply);
-  } catch(e) {
-    thinkingDiv.remove();
-    addMessage("assistant", "Connection error. Please check your API key configuration.");
-  }
-}
+// ═══ FIRESTORE CRUD ═══
+async function loadCrs(){const el=document.getElementById('crs-list');try{const snap=await db.collection('courses').orderBy('createdAt','desc').limit(20).get();
+if(snap.empty){el.innerHTML='<div class="ey" style="grid-column:1/-1"><div class="ei">📚</div>No courses yet<br/><button class="bp mt-2 text-xs px-3 py-1" onclick="openM(\'cc\')">Create →</button></div>';return}
+el.innerHTML='';snap.forEach(d=>{const c={id:d.id,...d.data()};el.innerHTML+=`<div class="cd p-4"><div class="flex justify-between mb-1"><span class="tg tt text-xs">${c.category||''}</span><span class="tg tw text-xs">${c.difficulty||''}</span></div><h3 class="font-bold text-sm mb-1">${esc(c.title||'')}</h3><p class="text-xs mb-2" style="color:var(--m)">${esc((c.description||'').slice(0,100))}</p><span class="text-xs" style="color:var(--m)">${c.authorName||''}</span></div>`})}catch(e){el.innerHTML=`<p class="text-red-400 p-3 text-xs">${e.message}</p>`}}
+async function subCourse(){const t=document.getElementById('cc-t').value.trim(),d=document.getElementById('cc-d').value.trim();if(!t||!d)return toast('Fill fields','err');
+await db.collection('courses').add({authorId:U.uid,authorName:UD?.displayName||'',authorPhoto:U.photoURL||'',title:t,description:d,category:document.getElementById('cc-c').value,difficulty:document.getElementById('cc-df').value,tags:(document.getElementById('cc-tg').value||'').split(',').map(x=>x.trim()).filter(Boolean),enrollCount:0,createdAt:FV.serverTimestamp()});
+closeM('cc');toast('📚 Created!','ok');loadCrs()}
 
-function clearChat() {
-  const chat = document.getElementById("chat-messages");
-  chat.innerHTML = `<div class="flex gap-3"><div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;background:var(--primary)">🤖</div><div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:#D1D5DB;line-height:1.7;max-width:85%">Chat cleared! I'm ready for a fresh start. What would you like to learn?</div></div>`;
-  chatHistory = [];
-}
+async function loadDbt(){const el=document.getElementById('dbt-list');try{const snap=await db.collection('doubts').orderBy('createdAt','desc').limit(20).get();
+if(snap.empty){el.innerHTML='<div class="ey"><div class="ei">❓</div>No doubts yet<br/><button class="bt mt-2 text-xs px-3 py-1" onclick="openM(\'cd\')">Ask →</button></div>';return}
+el.innerHTML='';snap.forEach(d=>{const q={id:d.id,...d.data()};el.innerHTML+=`<div class="p-3 border-b" style="border-color:var(--b)"><div class="flex gap-2">${avH(q,28)}<div class="flex-1"><p class="font-bold text-xs">${esc(q.title||'')}</p><p class="text-xs" style="color:var(--m)">${q.subject||''} · ${ago(q.createdAt)}</p></div></div></div>`})}catch(e){el.innerHTML=`<p class="text-red-400 p-3 text-xs">${e.message}</p>`}}
+async function subDoubt(){const t=document.getElementById('cd-t').value.trim();if(!t)return toast('Enter question','err');
+await db.collection('doubts').add({authorId:U.uid,authorName:UD?.displayName||'',authorPhoto:U.photoURL||'',title:t,description:document.getElementById('cd-d').value.trim(),subject:document.getElementById('cd-s').value.trim(),topic:document.getElementById('cd-tp').value.trim(),status:'open',answersCount:0,createdAt:FV.serverTimestamp()});
+closeM('cd');toast('❓ Posted!','ok');loadDbt()}
 
-async function generateQuiz() {
-  const subject = document.getElementById("quiz-subject").value;
-  const difficulty = document.getElementById("quiz-difficulty").value;
-  const blooms = document.getElementById("quiz-blooms").value;
-  const container = document.getElementById("quiz-container");
-  container.innerHTML = `<div class="empty"><div class="empty-icon spin">✨</div><p>Generating ${difficulty} ${subject} quiz at ${blooms} level…</p></div>`;
-  const sampleQuestions = [
-    { q: "What is the derivative of x² + 3x?", opts: ["2x + 3", "x + 3", "2x", "x² + 3"], ans: 0 },
-    { q: "Which data structure uses LIFO?", opts: ["Queue", "Stack", "Array", "Tree"], ans: 1 },
-    { q: "What is Newton's 2nd Law?", opts: ["F = ma", "E = mc²", "v = u + at", "P = mv"], ans: 0 }
-  ];
-  setTimeout(() => {
-    let html = `<div class="flex flex-col gap-4">`;
-    sampleQuestions.forEach((q, i) => {
-      html += `<div class="card p-4"><p class="font-semibold mb-3">Q${i+1}. ${q.q}</p><div class="grid grid-cols-2 gap-2">`;
-      q.opts.forEach((opt, j) => {
-        html += `<button onclick="selectAnswer(${i},${j},${q.ans})" class="quiz-opt-${i} text-sm p-2 rounded-lg border transition-all text-left" style="border-color:var(--border2);background:rgba(255,255,255,0.02)">${opt}</button>`;
-      });
-      html += `</div></div>`;
-    });
-    html += `<button onclick="generateQuiz()" class="btn-primary w-full py-3">✨ Generate New Quiz</button></div>`;
-    container.innerHTML = html;
-  }, 1500);
-}
+async function loadCom(){const el=document.getElementById('com-list');try{const snap=await db.collection('posts').orderBy('createdAt','desc').limit(20).get();
+if(snap.empty){el.innerHTML='<div class="ey"><div class="ei">👥</div>No posts</div>';return}
+el.innerHTML='';snap.forEach(d=>{const p={id:d.id,...d.data()};el.innerHTML+=`<div class="p-3 border-b" style="border-color:var(--b)"><div class="flex gap-2">${avH(p,28)}<div class="flex-1"><span class="font-semibold text-xs">${esc(p.authorName||'')}</span><span class="text-xs" style="color:var(--m)"> · ${ago(p.createdAt)}</span><p class="text-xs mt-1" style="color:var(--m)">${esc((p.content||'').slice(0,150))}</p></div></div></div>`})}catch(e){el.innerHTML=`<p class="text-red-400 p-3 text-xs">${e.message}</p>`}}
+async function subPost(){const c=document.getElementById('cp-c').value.trim();if(!c)return toast('Write something','err');
+await db.collection('posts').add({authorId:U.uid,authorName:UD?.displayName||'',authorPhoto:U.photoURL||'',content:c,tags:(document.getElementById('cp-tg').value||'').split(',').map(x=>x.trim().replace('#','')).filter(Boolean),likesCount:0,createdAt:FV.serverTimestamp()});
+closeM('cp');toast('🎉 Posted!','ok');loadCom()}
 
-function selectAnswer(qIndex, selected, correct) {
-  const btns = document.querySelectorAll(".quiz-opt-" + qIndex);
-  btns.forEach((btn, i) => {
-    btn.style.background = i === correct ? "rgba(78,205,196,0.2)" : (i === selected && selected !== correct ? "rgba(255,107,107,0.2)" : "rgba(255,255,255,0.02)");
-    btn.style.borderColor = i === correct ? "var(--accent)" : (i === selected && selected !== correct ? "var(--secondary)" : "var(--border2)");
-    btn.disabled = true;
-  });
-  if (selected === correct) toast("✅ Correct!", "success");
-  else toast("❌ Incorrect. The correct answer is highlighted.", "error");
-}
+// ═══ PROFILE ═══
+async function loadPro(){const u=UD;if(!u)return;const el=document.getElementById('pc');
+el.innerHTML=`<div style="height:100px;background:linear-gradient(135deg,rgba(108,92,231,0.3),rgba(0,206,201,0.2));position:relative">
+<div style="position:absolute;bottom:-28px;left:1rem"><div style="width:64px;height:64px;border-radius:50%;border:3px solid var(--dk);overflow:hidden">${u.photoURL?`<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover"/>`:`<div class="av" style="width:64px;height:64px;font-size:1.2rem">${(u.displayName||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase()}</div>`}</div></div>
+<button onclick="openEP()" style="position:absolute;bottom:8px;right:12px" class="bg text-xs px-2 py-1">✏️ Edit</button></div>
+<div class="px-4 pt-10 pb-4"><h2 class="text-xl font-bold">${esc(u.displayName||'')}</h2><p class="text-xs" style="color:var(--m)">${u.role||'Student'}${u.institution?' · '+u.institution:''}</p>
+${u.bio?`<p class="text-xs mt-1" style="color:var(--m)">${esc(u.bio)}</p>`:''}
+<div class="grid grid-cols-4 gap-2 mt-3 py-3 border-t border-b" style="border-color:var(--b)">
+<div class="text-center"><div class="text-lg font-bold gt">${u.xp||0}</div><div class="text-xs" style="color:var(--m)">XP</div></div>
+<div class="text-center"><div class="text-lg font-bold" style="color:var(--a3)">${u.streakDays||0}</div><div class="text-xs" style="color:var(--m)">Streak</div></div>
+<div class="text-center"><div class="text-lg font-bold" style="color:var(--w)">${u.quizzesCompleted||0}</div><div class="text-xs" style="color:var(--m)">Quizzes</div></div>
+<div class="text-center"><div class="text-lg font-bold" style="color:var(--co)">Lv${u.level||1}</div><div class="text-xs" style="color:var(--m)">Level</div></div>
+</div>
+${u.learningStyle?`<div class="mt-2"><p class="text-xs font-bold mb-1" style="color:var(--m)">COGNITIVE PROFILE</p><div class="flex flex-wrap gap-1"><span class="tg tp">Style: ${u.learningStyle}</span><span class="tg tt">Bloom's: ${u.bloomLevel||'?'}</span><span class="tg tw">Pace: ${u.pace||'?'}</span><span class="tg tgn">Lang: ${u.language||'en'}</span></div></div>`:''}
+${(u.subjects||[]).length?`<div class="mt-2"><p class="text-xs font-bold mb-1" style="color:var(--m)">SUBJECTS</p><div class="flex flex-wrap gap-1">${u.subjects.map(s=>`<span class="tg tp">${s}</span>`).join('')}</div></div>`:''}
+</div>`}
+function openEP(){if(!UD)return;document.getElementById('ep-n').value=UD.displayName||'';document.getElementById('ep-r').value=UD.role||'student';document.getElementById('ep-b').value=UD.bio||'';document.getElementById('ep-i').value=UD.institution||'';document.getElementById('ep-s').value=(UD.subjects||[]).join(', ');document.getElementById('ep-lang').value=UD.language||'en';openM('ep')}
+async function savePro(){const d={displayName:document.getElementById('ep-n').value.trim()||UD.displayName,role:document.getElementById('ep-r').value,bio:document.getElementById('ep-b').value.trim(),institution:document.getElementById('ep-i').value.trim(),subjects:document.getElementById('ep-s').value.split(',').map(s=>s.trim()).filter(Boolean),language:document.getElementById('ep-lang').value};
+await db.collection('users').doc(U.uid).update(d);await U.updateProfile({displayName:d.displayName});UD={...UD,...d};updNav();closeM('ep');toast('✅ Saved!','ok');loadPro()}
 
-async function loadDoubts() {
-  const el = document.getElementById("doubts-list");
-  try {
-    const snap = await db.collection("doubts").orderBy("createdAt","desc").limit(20).get();
-    if (snap.empty) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">💡</div><p class="font-bold mb-2">No doubts yet</p><button class="btn-primary mt-3 px-5 py-3 text-sm" onclick="openModal('ask-doubt')">Ask First Doubt →</button></div>`;
-      return;
-    }
-    el.innerHTML = "";
-    snap.forEach(doc => {
-      const d = {id:doc.id,...doc.data()};
-      const div = document.createElement("div");
-      div.className = "p-4 hover:bg-white/2 transition-colors";
-      div.innerHTML = `
-        <div class="flex gap-3">
-          ${avatarHTML(d,36)}
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-sm font-semibold">${d.authorName||""}</span>
-              <span class="badge badge-blue">${d.subject||""}</span>
-              <span class="text-xs" style="color:var(--muted)">${timeAgo(d.createdAt)}</span>
-            </div>
-            <p class="text-sm mb-2" style="color:#D1D5DB;line-height:1.6">${escHtml(d.question||"")}</p>
-            ${d.aiAnswer?`<div class="comment"><p class="text-xs font-bold mb-1" style="color:var(--primary)">🤖 AI Answer</p><p class="text-sm" style="color:#D1D5DB;line-height:1.6">${escHtml(d.aiAnswer)}</p></div>`:""}
-            <div class="flex gap-3 mt-2">
-              <span class="text-xs" style="color:var(--muted)">${d.answersCount||0} answers</span>
-              ${d.authorId===currentUser?.uid?`<button onclick="deleteDoubt('${d.id}')" class="action-btn text-red-400 text-xs">Delete</button>`:""}
-            </div>
-          </div>
-        </div>`;
-      el.appendChild(div);
-    });
-  } catch(e) { el.innerHTML = `<div class="empty text-red-400">Error: ${e.message}</div>`; }
-}
+// ═══ UTILS ═══
+function btn(id,dis){const e=document.getElementById(id);if(e){e.disabled=dis;if(dis)e.dataset.orig=e.textContent,e.textContent='🔄 Processing…';else if(e.dataset.orig)e.textContent=e.dataset.orig}}
 
-async function submitDoubt() {
-  const question = document.getElementById("d-question").value.trim();
-  const subject = document.getElementById("d-subject").value;
-  const urgency = document.getElementById("d-urgency").value;
-  if (!question) return toast("Please describe your doubt", "error");
-  try {
-    const docRef = await db.collection("doubts").add({
-      authorId: currentUser.uid,
-      authorName: currentUserData?.displayName || "Student",
-      authorPhoto: currentUser.photoURL || "",
-      question, subject, urgency,
-      aiAnswer: "AI-powered answer will appear here once OpenAI API is configured.",
-      answersCount: 0, solved: false,
-      createdAt: FieldValue.serverTimestamp()
-    });
-    closeModal("ask-doubt");
-    document.getElementById("d-question").value = "";
-    toast("💡 Doubt submitted! AI is analyzing...", "success");
-    loadDoubts();
-  } catch(e) { toast("Error: " + e.message, "error"); }
-}
+// ═══ AI CONTENT STUDIO ═══
+function showST(t,b){document.querySelectorAll('[id^="st-"]').forEach(e=>e.style.display='none');document.getElementById(`st-${t}`).style.display='block';document.querySelectorAll('.stb').forEach(x=>x.className=x.dataset.st===t?'stb bp text-xs px-2 py-1':'stb bg text-xs px-2 py-1')}
+async function genBook(){const t=document.getElementById('bk-t').value.trim();if(!t)return toast('Enter topic','err');btn('bk-btn',true);
+const r=await aiEngine.generateBook(t,parseInt(document.getElementById('bk-ch').value)||5,document.getElementById('bk-aud').value,document.getElementById('bk-lang').value);btn('bk-btn',false);
+let h=`<div class="rs"><h4>📚 ${esc(r.title||t)}</h4><p class="text-xs mb-2" style="color:var(--m)">Audience: ${document.getElementById('bk-aud').value} · ${(r.chapters||[]).length} chapters</p>
+${r.preface?`<p class="text-sm mb-3" style="color:var(--m)">${esc(r.preface)}</p>`:''}
+<p class="text-xs font-bold mb-1">Table of Contents:</p>${(r.tableOfContents||[]).map(c=>`<p class="text-xs">• ${esc(c)}</p>`).join('')}</div>`;
+(r.chapters||[]).forEach(ch=>{h+=`<div class="rs"><h4>Chapter ${ch.num}: ${esc(ch.title||'')}</h4>
+${ch.content?`<div class="text-sm mb-2" style="line-height:1.7;color:var(--m)">${fmt(ch.content)}</div>`:`<p class="text-sm" style="color:var(--m)">${esc(ch.summary||'')}</p>`}
+${(ch.keyTerms||[]).length?`<p class="text-xs mt-2"><strong>Key Terms:</strong> ${ch.keyTerms.join(', ')}</p>`:''}
+${(ch.reviewQuestions||[]).length?`<p class="text-xs mt-1"><strong>Review:</strong> ${ch.reviewQuestions.map(q=>esc(q)).join(' | ')}</p>`:''}</div>`});
+document.getElementById('book-res').innerHTML=h;addXP(25);
+// Auto-add to library
+db.collection('documents').add({userId:U.uid,title:r.title||t,author:'AI Generated',category:'ai-generated',description:r.preface||'',tags:[t],type:'ai-book',createdAt:FV.serverTimestamp()}).catch(()=>{})}
+async function genPodcast(){const t=document.getElementById('pd-t').value.trim();if(!t)return toast('Enter topic','err');btn('pd-btn',true);
+const r=await aiEngine.generatePodcast(t,document.getElementById('pd-dur').value,document.getElementById('pd-style').value,document.getElementById('pd-aud').value);btn('pd-btn',false);
+let h=`<div class="rs"><h4>🎙️ ${esc(r.title||t)}</h4><p class="text-xs mb-3" style="color:var(--m)">Duration: ${r.duration} · Host: ${r.host||'AI'}</p>`;
+(r.segments||[]).forEach(s=>{h+=`<div class="p-2 mb-2 rounded" style="background:rgba(0,206,201,0.06);border:1px solid rgba(0,206,201,0.15)"><div class="flex justify-between mb-1"><span class="text-xs font-bold">${esc(s.title)}</span><span class="text-xs" style="color:var(--m)">${s.timestamp}</span></div><p class="text-sm" style="line-height:1.6">${esc(s.script||'')}</p></div>`});
+h+=`<p class="text-xs mt-2 font-bold">Key Takeaways:</p>${(r.keyTakeaways||[]).map(k=>`<p class="text-xs">• ${esc(k)}</p>`).join('')}</div>`;
+document.getElementById('pod-res').innerHTML=h;addXP(15)}
+async function genVideo(){const t=document.getElementById('vd-t').value.trim();if(!t)return toast('Enter topic','err');btn('vd-btn',true);
+const r=await aiEngine.generateVideoScript(t,document.getElementById('vd-dur').value,document.getElementById('vd-aud').value);btn('vd-btn',false);
+let h=`<div class="rs"><h4>🎬 ${esc(r.title||t)}</h4><p class="text-xs mb-3" style="color:var(--m)">Duration: ${r.duration} · ${(r.scenes||[]).length} scenes</p>`;
+(r.scenes||[]).forEach(s=>{h+=`<div class="p-2 mb-2 rounded" style="background:rgba(253,203,110,0.06);border:1px solid rgba(253,203,110,0.15)"><div class="flex justify-between mb-1"><span class="text-xs font-bold">Scene ${s.sceneNum}</span><span class="text-xs" style="color:var(--m)">${s.timestamp} (${s.duration})</span></div>
+<p class="text-xs mb-1"><strong>🎤 Narration:</strong> ${esc(s.narration||'')}</p>
+<p class="text-xs mb-1"><strong>🖥️ Visual:</strong> ${esc(s.visualDescription||'')}</p>
+${s.textOverlay?`<p class="text-xs"><strong>📝 Text:</strong> ${esc(s.textOverlay)}</p>`:''}
+${s.animation?`<p class="text-xs"><strong>✨ Animation:</strong> ${esc(s.animation)}</p>`:''}</div>`});
+h+=`<p class="text-xs mt-2"><strong>Tags:</strong> ${(r.tags||[]).join(', ')}</p></div>`;
+document.getElementById('vid-res').innerHTML=h;addXP(15)}
+async function genImagePrompts(){const t=document.getElementById('ig-t').value.trim();if(!t)return toast('Enter topic','err');btn('ig-btn',true);
+const r=await aiEngine.generateImagePrompt(t,document.getElementById('ig-style').value);btn('ig-btn',false);
+let h=`<div class="rs"><h4>🖼️ Image Prompts for: ${esc(t)}</h4>`;
+(r.prompts||[]).forEach((p,i)=>{h+=`<div class="p-3 mb-2 rounded" style="background:rgba(108,92,231,0.06);border:1px solid rgba(108,92,231,0.15)">
+<p class="text-sm font-semibold mb-1">Prompt ${i+1}</p>
+<p class="text-xs mb-1" style="color:var(--m)">${esc(p.description)}</p>
+<p class="text-xs"><strong>Purpose:</strong> ${esc(p.purpose)}</p>
+<button class="bp text-xs mt-2 px-3 py-1" onclick="createImage('${esc(p.description).replace(/'/g,"\\'")}',this)">🎨 Generate with DALL·E →</button>
+<div class="gen-img mt-2"></div></div>`});h+=`</div>`;
+document.getElementById('img-res').innerHTML=h;addXP(10)}
+async function createImage(prompt,btn){btn.disabled=true;btn.textContent='🔄 Generating…';
+const r=await aiEngine.generateImage(prompt);
+const container=btn.nextElementSibling;
+if(r.url)container.innerHTML=`<img src="${r.url}" style="width:100%;border-radius:10px;margin-top:8px"/>`;
+else container.innerHTML=`<p class="text-xs" style="color:var(--co)">${esc(r.error||'Failed')}</p>`;
+btn.textContent='✅ Done';addXP(10)}
 
-async function deleteDoubt(id) {
-  if (!confirm("Delete this doubt?")) return;
-  await db.collection("doubts").doc(id).delete();
-  toast("Deleted"); loadDoubts();
-}
+// ═══ E-LIBRARY ═══
+let libFilter='all',libData=[];
+async function loadLib(){try{const snap=await db.collection('documents').where('userId','==',U.uid).orderBy('createdAt','desc').limit(50).get();
+libData=snap.docs.map(d=>({id:d.id,...d.data()}));renderLib(libData)}catch(e){}}
+function filterLib(cat,btn){libFilter=cat;document.querySelectorAll('.lcat').forEach(b=>b.className=b.dataset.lc===cat?'lcat bp text-xs px-2 py-1':'lcat bg text-xs px-2 py-1');
+renderLib(cat==='all'?libData:libData.filter(b=>b.category===cat))}
+function searchLib(q){if(!q)return renderLib(libData);const lq=q.toLowerCase();renderLib(libData.filter(b=>(b.title||'').toLowerCase().includes(lq)||(b.author||'').toLowerCase().includes(lq)||(b.tags||[]).some(t=>t.toLowerCase().includes(lq))))}
+function renderLib(books){const el=document.getElementById('lib-grid');if(!books.length){el.innerHTML='<div class="ey" style="grid-column:1/-1"><div class="ei">📚</div>No books found</div>';return}
+el.innerHTML='';books.forEach(b=>{el.innerHTML+=`<div class="cd p-3 cursor-pointer" onclick="viewBook('${b.id}')">
+<div class="text-2xl mb-2">${b.type==='ai-book'?'🤖':b.category==='research'?'📄':'📚'}</div>
+<h4 class="font-bold text-xs mb-1 truncate">${esc(b.title||'')}</h4>
+<p class="text-xs" style="color:var(--m)">${esc(b.author||'Unknown')}</p>
+<span class="tg ${b.category==='ai-generated'?'tp':b.category==='research'?'tt':'tw'} mt-1">${b.category||''}</span></div>`})}
+function viewBook(id){const b=libData.find(x=>x.id===id);if(!b)return;
+toast(`📖 Opening: ${b.title}`,'ok')}
+async function addToLibrary(){const t=document.getElementById('lb-title').value.trim();if(!t)return toast('Title required','err');
+await db.collection('documents').add({userId:U.uid,title:t,author:document.getElementById('lb-author').value.trim(),description:document.getElementById('lb-desc').value.trim(),category:document.getElementById('lb-cat').value,tags:(document.getElementById('lb-tags').value||'').split(',').map(x=>x.trim()).filter(Boolean),url:document.getElementById('lb-url').value.trim(),content:document.getElementById('lb-content').value.trim(),type:'uploaded',readProgress:0,bookmarked:false,createdAt:FV.serverTimestamp()});
+closeM('addbook');toast('📚 Added to library!','ok');loadLib()}
 
-async function loadFeed() {
-  const el = document.getElementById("feed-list");
-  try {
-    const snap = await db.collection("posts").orderBy("createdAt","desc").limit(20).get();
-    if (snap.empty) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">🌱</div><p class="font-bold mb-2">No posts yet</p><p class="text-sm">Be the first to share!</p></div>`;
-      return;
-    }
-    el.innerHTML = "";
-    snap.forEach(doc => {
-      const p = {id:doc.id,...doc.data()};
-      el.appendChild(buildPostCard(p));
-    });
-  } catch(e) { el.innerHTML = `<div class="empty text-red-400">Error: ${e.message}</div>`; }
-}
+// ═══ DISCUSSION FORUMS ═══
+let forumFilter='all',forumData=[];
+async function loadForums(){try{const snap=await db.collection('posts').where('type','==','forum').orderBy('createdAt','desc').limit(30).get();
+forumData=snap.docs.map(d=>({id:d.id,...d.data()}));renderForums(forumData)}catch(e){
+// fallback: load all posts
+try{const snap=await db.collection('posts').orderBy('createdAt','desc').limit(20).get();
+forumData=snap.docs.map(d=>({id:d.id,...d.data()}));renderForums(forumData)}catch(e2){}}}
+function filterForums(cat,btn){forumFilter=cat;document.querySelectorAll('.ftb').forEach(b=>b.className=b.dataset.fc===cat?'ftb bp text-xs px-2 py-1':'ftb bg text-xs px-2 py-1');
+renderForums(cat==='all'?forumData:forumData.filter(f=>f.forumCategory===cat))}
+function renderForums(threads){const el=document.getElementById('forum-list');if(!threads.length){el.innerHTML='<div class="ey"><div class="ei">💬</div>No threads yet<br/><button class="bp mt-2 text-xs px-3 py-1" onclick="openM(\'newthread\')">Start Discussion →</button></div>';return}
+el.innerHTML='';threads.forEach(t=>{el.innerHTML+=`<div class="p-3 border-b" style="border-color:var(--b)"><div class="flex gap-2">${avH(t,28)}<div class="flex-1">
+<div class="flex items-center gap-2 mb-1"><span class="tg ${t.forumCategory==='help'?'tc':t.forumCategory==='resource'?'tgn':'tp'} text-xs">${t.forumCategory||'general'}</span><span class="text-xs" style="color:var(--m)">${ago(t.createdAt)}</span></div>
+<p class="font-bold text-xs">${esc(t.title||t.content?.slice(0,80)||'')}</p>
+<p class="text-xs mt-1" style="color:var(--m)">${esc((t.content||'').slice(0,120))}</p>
+<div class="flex gap-2 mt-1"><span class="text-xs" style="color:var(--m)">by ${t.authorName||''}</span><span class="text-xs" style="color:var(--a2)">💬 ${t.commentsCount||0}</span></div>
+</div></div></div>`})}
+async function createThread(){const t=document.getElementById('ft-title').value.trim(),b=document.getElementById('ft-body').value.trim();if(!t||!b)return toast('Fill title & body','err');
+await db.collection('posts').add({authorId:U.uid,authorName:UD?.displayName||'User',authorPhoto:U.photoURL||'',type:'forum',title:t,content:b,forumCategory:document.getElementById('ft-cat').value,tags:(document.getElementById('ft-tags').value||'').split(',').map(x=>x.trim()).filter(Boolean),likesCount:0,commentsCount:0,createdAt:FV.serverTimestamp()});
+closeM('newthread');toast('💬 Thread created!','ok');loadForums();addXP(5)}
 
-function buildPostCard(p) {
-  const div = document.createElement("div");
-  div.className = "post-card";
-  const tags = (p.tags||[]).map(t=>`<span class="post-tag">#${t}</span>`).join("");
-  div.innerHTML = `
-    <div class="flex gap-3">
-      ${avatarHTML(p,40)}
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="font-semibold text-sm">${p.authorName||"Scholar"}</span>
-          <span class="text-xs" style="color:var(--muted)">${timeAgo(p.createdAt)}</span>
-        </div>
-        <p class="post-content">${escHtml(p.content||"")}</p>
-        <div class="mb-2">${tags}</div>
-        <div class="flex items-center gap-1">
-          <button onclick="toggleLike('${p.id}',this)" class="action-btn like-btn">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            <span class="like-count">${p.likesCount||0}</span>
-          </button>
-          ${p.authorId===currentUser?.uid?`<button onclick="deletePost('${p.id}')" class="action-btn text-red-400 text-xs ml-auto">Delete</button>`:""}
-        </div>
-      </div>
-    </div>`;
-  return div;
-}
+// ═══ CERTIFICATES ═══
+async function genCert(){const course=document.getElementById('cert-course').value.trim();const score=parseInt(document.getElementById('cert-score').value)||0;
+if(!course)return toast('Enter course name','err');
+const cert=await aiEngine.generateCertificate(UD?.displayName||'Student',course,score);
+const el=document.getElementById('cert-display');
+el.innerHTML=`<div class="cd p-6 text-center" style="background:linear-gradient(135deg,rgba(108,92,231,0.08),rgba(0,206,201,0.08));border:2px solid var(--a)">
+<div class="text-4xl mb-3">🏅</div>
+<p class="text-xs font-bold mb-1" style="color:var(--a2)">CERTIFICATE OF ${(cert.achievements||'COMPLETION').toUpperCase()}</p>
+<h3 class="text-xl font-black mb-2">${esc(cert.studentName)}</h3>
+<p class="text-sm mb-1">has successfully completed</p>
+<p class="text-lg font-bold mb-2" style="color:var(--a3)">${esc(cert.courseName)}</p>
+<p class="text-sm mb-3">Score: <strong>${cert.score}%</strong></p>
+<div class="flex justify-center gap-4 text-xs" style="color:var(--m)">
+<span>📅 ${cert.date}</span>
+<span>🔑 ${cert.certId}</span>
+<span>✅ Verified</span>
+</div>
+<p class="text-xs mt-3" style="color:var(--m)">Issued by ${cert.issuer}</p>
+</div>`;
+// Save to Firestore
+db.collection('certificates').doc(cert.certId).set({...cert,userId:U.uid,createdAt:FV.serverTimestamp()}).catch(()=>{});
+addXP(20);toast('🏅 Certificate generated!','ok')}
 
-async function toggleLike(postId, btn) {
-  if (!currentUser) return;
-  const likeRef = db.collection("likes").doc(`${postId}_${currentUser.uid}`);
-  const postRef = db.collection("posts").doc(postId);
-  const snap = await likeRef.get();
-  const countEl = btn.querySelector(".like-count");
-  if (snap.exists) {
-    await likeRef.delete();
-    await postRef.update({likesCount: FieldValue.increment(-1)});
-    btn.classList.remove("liked");
-    countEl.textContent = Math.max(0, parseInt(countEl.textContent)-1);
-  } else {
-    await likeRef.set({postId, userId:currentUser.uid, createdAt:FieldValue.serverTimestamp()});
-    await postRef.update({likesCount: FieldValue.increment(1)});
-    btn.classList.add("liked");
-    countEl.textContent = parseInt(countEl.textContent)+1;
-  }
-}
+// ═══ ADMIN PANEL ═══
+function showAD(t,btn){document.querySelectorAll('[id^="ad-"]').forEach(e=>e.style.display='none');document.getElementById(`ad-${t}`).style.display='block';document.querySelectorAll('.adb').forEach(b=>b.className=b.dataset.ad===t?'adb bp text-xs px-2 py-1':'adb bg text-xs px-2 py-1');
+if(t==='overview')loadAdminStats();if(t==='users')loadAdminUsers();if(t==='content')loadAdminContent()}
+async function loadAdminStats(){try{
+const [users,posts,courses,doubts]=await Promise.all([db.collection('users').get(),db.collection('posts').get(),db.collection('courses').get(),db.collection('doubts').get()]);
+document.getElementById('adm-users').textContent=users.size;document.getElementById('adm-posts').textContent=posts.size;
+document.getElementById('adm-courses').textContent=courses.size;document.getElementById('adm-doubts').textContent=doubts.size}catch(e){}}
+async function loadAdminUsers(){try{const snap=await db.collection('users').limit(30).get();const el=document.getElementById('admin-users-list');el.innerHTML='';
+snap.forEach(d=>{const u=d.data();el.innerHTML+=`<div class="p-2 flex items-center gap-2 border-b" style="border-color:var(--b)">${avH(u,28)}<div class="flex-1"><p class="text-xs font-bold">${esc(u.displayName||'')}</p><p class="text-xs" style="color:var(--m)">${u.email||''} · ${u.role||'student'} · XP:${u.xp||0}</p></div><span class="tg ${u.role==='teacher'?'tw':'tp'} text-xs">${u.role||'student'}</span></div>`})}catch(e){}}
+function searchAdminUsers(q){if(!q)return loadAdminUsers();/*simplified search*/}
+async function loadAdminContent(){try{const snap=await db.collection('posts').orderBy('createdAt','desc').limit(20).get();const el=document.getElementById('admin-content-list');el.innerHTML='';
+snap.forEach(d=>{const p=d.data();el.innerHTML+=`<div class="p-2 flex items-center gap-2 border-b" style="border-color:var(--b)"><div class="flex-1"><p class="text-xs font-bold">${esc((p.content||'').slice(0,60))}</p><p class="text-xs" style="color:var(--m)">by ${p.authorName||''} · ${ago(p.createdAt)}</p></div>
+<button class="act text-xs" onclick="db.collection('posts').doc('${d.id}').delete().then(()=>{toast('Removed');loadAdminContent()})">🗑️</button></div>`})}catch(e){}}
+async function genAdminReport(){const stats={users:document.getElementById('adm-users')?.textContent||0,posts:document.getElementById('adm-posts')?.textContent||0,courses:document.getElementById('adm-courses')?.textContent||0};
+const r=await aiEngine.adminReport(stats);const el=document.getElementById('admin-report')||document.getElementById('admin-ai-report');
+if(el)el.innerHTML=`<div class="rs"><h4>🤖 AI Platform Report</h4><p class="text-sm mb-2">${esc(r.summary||'')}</p>
+<p class="text-xs font-bold mb-1" style="color:var(--a3)">Highlights:</p>${(r.highlights||[]).map(h=>`<p class="text-xs">✓ ${esc(h)}</p>`).join('')}
+${(r.concerns||[]).length?`<p class="text-xs font-bold mt-2 mb-1" style="color:var(--co)">Concerns:</p>${r.concerns.map(c=>`<p class="text-xs">⚠️ ${esc(c)}</p>`).join('')}`:''}
+<p class="text-xs font-bold mt-2 mb-1">Recommendations:</p>${(r.recommendations||[]).map(r2=>`<p class="text-xs">→ ${esc(r2)}</p>`).join('')}
+<p class="text-xs mt-2">Engagement Score: <strong style="color:var(--a2)">${r.engagementScore||0}/100</strong></p></div>`}
 
-async function deletePost(id) {
-  if (!confirm("Delete post?")) return;
-  await db.collection("posts").doc(id).delete();
-  toast("Deleted"); loadFeed();
-}
-
-async function submitPost() {
-  const content = document.getElementById("post-content").value.trim();
-  const tagsRaw = document.getElementById("post-tags").value.trim();
-  if (!content) return toast("Please write something", "error");
-  const tags = tagsRaw ? tagsRaw.split(",").map(t=>t.trim().replace("#","")).filter(Boolean) : [];
-  try {
-    await db.collection("posts").add({
-      authorId: currentUser.uid,
-      authorName: currentUserData?.displayName || "Scholar",
-      authorPhoto: currentUser.photoURL || "",
-      content, tags, likesCount: 0,
-      createdAt: FieldValue.serverTimestamp()
-    });
-    closeModal("create-post");
-    document.getElementById("post-content").value = "";
-    document.getElementById("post-tags").value = "";
-    toast("🎉 Posted!", "success");
-    loadFeed();
-  } catch(e) { toast("Error: " + e.message, "error"); }
-  }
-
-async function loadProfile() {
-  if (!currentUser) return;
-  const snap = await db.collection("users").doc(currentUser.uid).get();
-  const u = snap.exists ? snap.data() : currentUserData;
-  if (snap.exists) currentUserData = snap.data();
-  const el = document.getElementById("profile-content");
-  const skills = (u?.skills||[]).map(s=>`<span class="tech-tag">${s}</span>`).join("");
-  const postsSnap = await db.collection("posts").where("authorId","==",currentUser.uid).orderBy("createdAt","desc").limit(10).get();
-  el.innerHTML = `
-    <div style="height:120px;background:linear-gradient(135deg,rgba(108,99,255,0.3),rgba(78,205,196,0.2));position:relative">
-      <div style="position:absolute;bottom:-32px;left:1.5rem">
-        <div style="width:80px;height:80px;border-radius:50%;border:4px solid var(--navy);overflow:hidden;background:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:1.5rem;color:#fff">
-          ${u?.photoURL?`<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover"/>`:((u?.displayName||"U").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase())}
-        </div>
-      </div>
-      <button onclick="openEditProfile()" class="absolute bottom-3 right-4 btn-ghost text-xs px-3 py-2">✏️ Edit Profile</button>
-    </div>
-    <div class="px-6 pt-12 pb-4">
-      <h2 class="text-2xl font-bold">${escHtml(u?.displayName||"Scholar")}</h2>
-      <p class="text-sm mt-1" style="color:var(--muted)">
-        <span class="badge badge-blue">${u?.role||"Student"}</span>
-        ${u?.institution?` · ${u.institution}`:""}
-      </p>
-      ${u?.bio?`<p class="text-sm mt-3 max-w-lg" style="color:#D1D5DB;line-height:1.65">${escHtml(u.bio)}</p>`:""}
-      <div class="flex gap-6 mt-5 py-4 border-t border-b" style="border-color:var(--border)">
-        <div class="profile-stat"><div class="profile-stat-num">${postsSnap.size}</div><div class="profile-stat-lbl">Posts</div></div>
-        <div class="profile-stat"><div class="profile-stat-num">${u?.coursesEnrolled||0}</div><div class="profile-stat-lbl">Courses</div></div>
-        <div class="profile-stat"><div class="profile-stat-num">${u?.studyStreak||0}</div><div class="profile-stat-lbl">Day Streak</div></div>
-        <div class="profile-stat"><div class="profile-stat-num">${u?.totalStudyTime||0}h</div><div class="profile-stat-lbl">Study Time</div></div>
-      </div>
-      ${skills?`<div class="mt-4"><p class="text-xs font-bold mb-2" style="color:var(--muted)">SKILLS</p><div class="flex flex-wrap gap-1">${skills}</div></div>":""}
-    </div>
-    <div class="px-6 pb-6">
-      <h3 class="font-bold mb-4 text-sm">RECENT POSTS</h3>
-      <div class="flex flex-col gap-3">
-        ${postsSnap.empty?"<p class='text-sm' style='color:var(--muted)'>No posts yet. Share something with the community!</p>":postsSnap.docs.map(d=>{const p=d.data();return `<div class="card p-4"><p class="text-sm mb-2" style="color:#D1D5DB;line-height:1.6">${escHtml((p.content||"").slice(0,150))}...</p><p class="text-xs" style="color:var(--muted)">${timeAgo(p.createdAt)}</p></div>`;}).join("")}
-      </div>
-    </div>`;
-}
-
-function openEditProfile() {
-  const u = currentUserData;
-  if (!u) return;
-  document.getElementById("ep-name").value = u.displayName||"";
-  document.getElementById("ep-role").value = u.role||"student";
-  document.getElementById("ep-bio").value = u.bio||"";
-  document.getElementById("ep-institution").value = u.institution||"";
-  document.getElementById("ep-skills").value = (u.skills||[]).join(", ");
-  openModal("edit-profile");
-}
-
-async function saveProfile() {
-  const data = {
-    displayName: document.getElementById("ep-name").value.trim() || currentUserData?.displayName,
-    role: document.getElementById("ep-role").value,
-    bio: document.getElementById("ep-bio").value.trim(),
-    institution: document.getElementById("ep-institution").value.trim(),
-    skills: document.getElementById("ep-skills").value.split(",").map(s=>s.trim()).filter(Boolean)
-  };
-  try {
-    await db.collection("users").doc(currentUser.uid).update(data);
-    await currentUser.updateProfile({displayName: data.displayName});
-    currentUserData = {...currentUserData,...data};
-    updateNavUser();
-    closeModal("edit-profile");
-    toast("✅ Profile updated!", "success");
-    loadProfile();
-  } catch(e) { toast("Error: " + e.message, "error"); }
-}
-
-function openModal(name) {
-  document.getElementById("modal-"+name).classList.add("open");
-}
-function closeModal(name) {
-  document.getElementById("modal-"+name).classList.remove("open");
-}
-document.querySelectorAll(".overlay").forEach(o => {
-  o.addEventListener("click", e => { if(e.target===o) o.classList.remove("open"); });
-});
-
-async function signOut() {
-  if (!confirm("Sign out?")) return;
-  await auth.signOut();
-  window.location.href = "index.html";
+// ═══ ENHANCED SECTION LOADER ═══
+const _origLoadSec = loadSec;
+loadSec = function(n) {
+  _origLoadSec(n);
+  if(n==='elibrary')loadLib();
+  if(n==='forums')loadForums();
+  if(n==='admin')loadAdminStats();
 }
 </script>
 </body>

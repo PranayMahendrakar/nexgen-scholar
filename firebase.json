@@ -1,0 +1,4 @@
+{
+  "hosting":{"public":".","ignore":["firebase.json",".firebaserc","firestore.rules","README.md","config.example.js","**/.*"],"rewrites":[{"source":"/app","destination":"/app.html"}],"headers":[{"source":"**/*.html","headers":[{"key":"Cache-Control","value":"no-cache"}]},{"source":"**/*.js","headers":[{"key":"Cache-Control","value":"max-age=86400"}]}]},
+  "firestore":{"rules":"firestore.rules"}
+}

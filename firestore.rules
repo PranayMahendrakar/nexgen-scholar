@@ -1,91 +1,35 @@
 rules_version = '2';
 service cloud.firestore {
-    match /databases/{database}/documents {
-
-          // Users: anyone can read, only owner can write
-          match /users/{userId} {
-                  allow read: if true;
-                  allow write: if request.auth != null && request.auth.uid == userId;
-                }
-
-          // Posts: anyone can read, auth users create, owner delete
-          match /posts/{postId} {
-                  allow read: if true;
-                  allow create: if request.auth != null
-                    && request.resource.data.authorId == request.auth.uid;
-                  allow update: if request.auth != null
-                    && (resource.data.authorId == request.auth.uid
-                                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount','commentsCount']));
-                  allow delete: if request.auth != null
-                    && resource.data.authorId == request.auth.uid;
-                }
-
-          // Courses: anyone can read, educators create/edit, auth users enroll
-          match /courses/{courseId} {
-                  allow read: if true;
-                  allow create: if request.auth != null
-                    && request.resource.data.authorId == request.auth.uid;
-                  allow update: if request.auth != null
-                    && (resource.data.authorId == request.auth.uid
-                                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enrolledCount','rating']));
-                  allow delete: if request.auth != null
-                    && resource.data.authorId == request.auth.uid;
-                }
-
-          // Enrollments: user can read/write their own
-          match /enrollments/{enrollId} {
-                  allow read: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-                  allow create: if request.auth != null
-                    && request.resource.data.userId == request.auth.uid;
-                  allow update: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-                  allow delete: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-                }
-
-          // Quiz results: user can read/write their own
-          match /quizResults/{resultId} {
-                  allow read: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-                  allow create: if request.auth != null
-                    && request.resource.data.userId == request.auth.uid;
-                  allow update: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-                }
-
-          // Doubts/Questions
-          match /doubts/{doubtId} {
-                  allow read: if true;
-                  allow create: if request.auth != null
-                    && request.resource.data.authorId == request.auth.uid;
-                  allow update: if request.auth != null
-                    && (resource.data.authorId == request.auth.uid
-                                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answersCount','solved']));
-                  allow delete: if request.auth != null
-                    && resource.data.authorId == request.auth.uid;
-                }
-
-          // Answers to doubts
-          match /answers/{answerId} {
-                  allow read: if true;
-                  allow create: if request.auth != null
-                    && request.resource.data.authorId == request.auth.uid;
-                  allow delete: if request.auth != null
-                    && resource.data.authorId == request.auth.uid;
-                }
-
-          // Likes
-          match /likes/{likeId} {
-                  allow read: if request.auth != null;
-                  allow write: if request.auth != null;
-                }
-
-          // Notifications
-          match /notifications/{notifId} {
-                  allow read: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-                  allow write: if request.auth != null;
-                }
-        }
+  match /databases/{database}/documents {
+    match /users/{userId} { allow read: if true; allow write: if request.auth != null && request.auth.uid == userId; }
+    match /posts/{postId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount','commentsCount'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /likes/{likeId} { allow read: if request.auth != null; allow write: if request.auth != null; }
+    match /follows/{followId} { allow read: if true; allow write: if request.auth != null; }
+    match /projects/{projectId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['starsCount'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /problems/{problemId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['solutionsCount','status'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /solutions/{solutionId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /cognitiveProfiles/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+    match /courses/{courseId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enrollCount','rating','lessonsCount'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /lessons/{lessonId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /quizzes/{quizId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptsCount','avgScore'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /quizAttempts/{attemptId} { allow read: if request.auth != null; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; allow update: if request.auth != null && resource.data.userId == request.auth.uid; }
+    match /studyPlans/{planId} { allow read: if request.auth != null && resource.data.userId == request.auth.uid; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid; }
+    match /chatThreads/{threadId} { allow read: if request.auth != null && resource.data.userId == request.auth.uid; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid; }
+    match /chatMessages/{msgId} { allow read: if request.auth != null; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; }
+    match /doubts/{doubtId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answersCount','status'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /doubtAnswers/{answerId} { allow read: if true; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /documents/{docId} { allow read: if request.auth != null && resource.data.userId == request.auth.uid; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid; }
+    match /essays/{essayId} { allow read: if request.auth != null; allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid; allow update: if request.auth != null && (resource.data.authorId == request.auth.uid || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score','feedback','status'])); allow delete: if request.auth != null && resource.data.authorId == request.auth.uid; }
+    match /enrollments/{enrollId} { allow read: if request.auth != null; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; allow delete: if request.auth != null && resource.data.userId == request.auth.uid; }
+    match /flashcardDecks/{deckId} { allow read: if request.auth != null; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid; }
+    match /studySessions/{sessionId} { allow read: if request.auth != null && resource.data.userId == request.auth.uid; allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; }
+    match /notifications/{notifId} { allow read: if request.auth != null && resource.data.userId == request.auth.uid; allow create: if request.auth != null; allow update: if request.auth != null && resource.data.userId == request.auth.uid; }
   }
+}
+
+// Additional rules appended - add before closing brackets in the actual file
+// Certificates collection
+// match /certificates/{certId} { allow read: if true; allow create: if request.auth != null; 
+    match /certificates/{certId} { allow read: if true; allow create: if request.auth != null; allow delete: if request.auth != null && resource.data.userId == request.auth.uid; }
+  }
+}
