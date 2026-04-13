@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+          // Users: anyone can read, only owner can write
+          match /users/{userId} {
+                  allow read: if true;
+                  allow write: if request.auth != null && request.auth.uid == userId;
+                }
+
+          // Posts: anyone can read, auth users create, owner delete
+          match /posts/{postId} {
+                  allow read: if true;
+                  allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+                  allow update: if request.auth != null
+                    && (resource.data.authorId == request.auth.uid
+                                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount','commentsCount']));
+                  allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+                }
+
+          // Courses: anyone can read, educators create/edit, auth users enroll
+          match /courses/{courseId} {
+                  allow read: if true;
+                  allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+                  allow update: if request.auth != null
+                    && (resource.data.authorId == request.auth.uid
+                                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enrolledCount','rating']));
+                  allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+                }
+
+          // Enrollments: user can read/write their own
+          match /enrollments/{enrollId} {
+                  allow read: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+                  allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+                  allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+                  allow delete: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+                }
+
+          // Quiz results: user can read/write their own
+          match /quizResults/{resultId} {
+                  allow read: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+                  allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+                  allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+                }
+
+          // Doubts/Questions
+          match /doubts/{doubtId} {
+                  allow read: if true;
+                  allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+                  allow update: if request.auth != null
+                    && (resource.data.authorId == request.auth.uid
+                                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answersCount','solved']));
+                  allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+                }
+
+          // Answers to doubts
+          match /answers/{answerId} {
+                  allow read: if true;
+                  allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+                  allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+                }
+
+          // Likes
+          match /likes/{likeId} {
+                  allow read: if request.auth != null;
+                  allow write: if request.auth != null;
+                }
+
+          // Notifications
+          match /notifications/{notifId} {
+                  allow read: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+                  allow write: if request.auth != null;
+                }
+        }
+  }
