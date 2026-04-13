@@ -1,11 +1,12 @@
-// EDIT THIS FILE with your Firebase project credentials
-// Get these from: Firebase Console > Project Settings > General > Your Apps > Web App
-
+// ╔══════════════════════════════════════════════════════════╗
+// ║  STEP 1: Paste your Firebase config here (Project Settings → General → Your apps)
+// ╚══════════════════════════════════════════════════════════╝
 window.FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-    authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId:         "YOUR_PROJECT_ID",
-        storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-          messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId:             "YOUR_APP_ID"
-            };
+  apiKey: "AIzaSyCq0LExBPRiU2ljpcQizrg-lxckD3F9iAk",
+  authDomain: "india-llms.firebaseapp.com",
+  projectId: "india-llms",
+  storageBucket: "india-llms.firebasestorage.app",
+  messagingSenderId: "364936295146",
+  appId: "1:364936295146:web:2f93ad5494c852dbf29d93",
+  measurementId: "G-LRG0F16PPF"
+};
