@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NexGen Scholar — Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+:root{--primary:#6C63FF;--primary-dark:#5a52d5;--secondary:#FF6B6B;--accent:#4ECDC4;--navy:#0A0E1A;--surface:#111827;--surface2:#1F2937;--border:#1F2937;--border2:#374151;--muted:#6B7280;--text:#F9FAFB;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif}
+.app-layout{display:flex;min-height:100vh;padding-top:56px}
+.sidebar{width:240px;flex-shrink:0;position:fixed;top:56px;left:0;bottom:0;overflow-y:auto;border-right:1px solid var(--border);background:var(--navy);padding:1rem 0;display:flex;flex-direction:column}
+.main-area{margin-left:240px;margin-right:300px;flex:1;min-height:calc(100vh - 56px)}
+.right-panel{width:300px;position:fixed;top:56px;right:0;bottom:0;overflow-y:auto;border-left:1px solid var(--border);background:var(--navy);padding:1.25rem}
+@media(max-width:1200px){.right-panel{display:none}.main-area{margin-right:0}}
+@media(max-width:768px){.sidebar{display:none}.main-area{margin-left:0;margin-right:0}.bottom-nav{display:flex!important}}
+.topnav{position:fixed;top:0;left:0;right:0;z-index:50;height:56px;background:rgba(10,14,26,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--surface);border-top:1px solid var(--border);justify-content:space-around;padding:0.5rem 0}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0.4rem 1rem;border:none;background:none;color:var(--muted);font-size:0.65rem;font-family:'DM Sans',sans-serif;cursor:pointer;transition:color 0.2s}
+.bnav-btn.active{color:var(--primary)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:0.65rem 1.25rem;color:var(--muted);font-size:0.88rem;font-weight:500;cursor:pointer;border-radius:0;transition:all 0.15s;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text)}
+.nav-item.active{color:var(--text);background:rgba(108,99,255,0.08);border-left-color:var(--primary)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.card-hover{transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s}
+.card-hover:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.post-card{padding:1.25rem}
+.post-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+.post-content{font-size:0.9rem;line-height:1.65;color:#D1D5DB;margin:0.75rem 0}
+.post-tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:0.7rem;font-weight:600;background:rgba(108,99,255,0.12);color:var(--primary);margin:2px}
+.post-tag.green{background:rgba(78,205,196,0.12);color:#4ECDC4}
+.post-tag.red{background:rgba(255,107,107,0.12);color:#FF6B6B}
+.action-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:none;background:none;color:var(--muted);font-size:0.78rem;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.action-btn:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+.action-btn.liked{color:#ef4444}
+.inp{width:100%;padding:0.65rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:all 0.2s}
+.inp::placeholder{color:var(--muted)}
+.inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,0.12);background:rgba(255,255,255,0.06)}
+textarea.inp{resize:vertical;min-height:80px}
+.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;padding:0.65rem 1.25rem;font-size:0.88rem;transition:all 0.2s}
+.btn-primary:hover{background:var(--primary-dark);box-shadow:0 6px 20px rgba(108,99,255,0.3)}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:10px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0.6rem 1.1rem;font-size:0.85rem;transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);background:rgba(255,255,255,0.04)}
+.btn-accent{background:var(--accent);color:#0A0E1A;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;padding:0.65rem 1.25rem;font-size:0.88rem;transition:all 0.2s}
+.btn-accent:hover{background:#3db8b0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.overlay.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px 22px;border-radius:999px;font-size:0.82rem;opacity:0;pointer-events:none;transition:all 0.3s;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:#7f1d1d;border-color:#991b1b}
+.toast.success{background:#14532d;border-color:#166534}
+.section-header{padding:1.25rem 1.25rem 0;border-bottom:1px solid var(--border);padding-bottom:1.25rem}
+.profile-stat{text-align:center}
+.profile-stat-num{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700}
+.profile-stat-lbl{font-size:0.7rem;color:var(--muted);margin-top:1px}
+.tech-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:0.68rem;font-weight:600;background:rgba(255,255,255,0.06);color:#9CA3AF;margin:2px}
+.spin{animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:1rem}
+.avatar-placeholder{display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;font-family:'Syne',sans-serif;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));flex-shrink:0}
+.g-text{background:linear-gradient(135deg,#6C63FF,#4ECDC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.comment{padding:0.75rem;background:rgba(255,255,255,0.02);border-radius:10px;margin-top:0.5rem}
+.course-card{padding:1.25rem;cursor:pointer}
+.progress-bar-bg{width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width 0.5s}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:0.72rem;font-weight:600}
+.badge-blue{background:rgba(108,99,255,0.15);color:var(--primary)}
+.badge-green{background:rgba(78,205,196,0.15);color:var(--accent)}
+.badge-red{background:rgba(255,107,107,0.15);color:var(--secondary)}
+.badge-yellow{background:rgba(251,191,36,0.15);color:#fbbf24}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen" style="position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem">
+  <div style="width:52px;height:52px;border-radius:14px;background:var(--primary);display:flex;align-items:center;justify-content:center">
+    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <p style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700">NexGen<span style="color:var(--primary)">Scholar</span></p>
+  <div style="width:32px;height:32px;border:3px solid rgba(108,99,255,0.2);border-top-color:var(--primary);border-radius:50%" class="spin"></div>
+</div>
+
+<!-- TOPNAV -->
+<nav class="topnav">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--primary)">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem">NexGen<span style="color:var(--primary)">Scholar</span></span>
+  </div>
+  <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl flex-1 max-w-sm mx-6" style="background:rgba(255,255,255,0.05);border:1px solid var(--border2)">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search courses, topics, doubts…" id="global-search" style="background:none;border:none;outline:none;font-size:0.83rem;color:var(--text);width:100%;font-family:'DM Sans',sans-serif"/>
+  </div>
+  <div class="flex items-center gap-3">
+    <button onclick="showSection('ai-tutor')" class="relative p-2 rounded-lg hover:bg-white/5 transition-colors" style="border:none;background:none;cursor:pointer;color:var(--primary)">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <div id="nav-user" class="flex items-center gap-2 cursor-pointer" onclick="showSection('profile')">
+      <div id="nav-avatar" class="avatar-placeholder" style="width:32px;height:32px;font-size:0.75rem">?</div>
+      <span id="nav-name" class="hidden md:block text-sm font-medium" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <button onclick="signOut()" class="btn-ghost text-xs px-3 py-2">Sign Out</button>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="px-4 mb-4">
+    <button onclick="showSection('ai-tutor')" class="btn-primary w-full py-3 text-sm">🤖 Ask AI Tutor</button>
+  </div>
+  <nav>
+    <a class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" data-section="courses" onclick="showSection('courses')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Courses
+    </a>
+    <a class="nav-item" data-section="ai-tutor" onclick="showSection('ai-tutor')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      AI Tutor
+    </a>
+    <a class="nav-item" data-section="practice" onclick="showSection('practice')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Practice
+    </a>
+    <a class="nav-item" data-section="doubts" onclick="showSection('doubts')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Doubts
+    </a>
+    <a class="nav-item" data-section="community" onclick="showSection('community')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Community
+    </a>
+    <a class="nav-item" data-section="profile" onclick="showSection('profile')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      My Profile
+    </a>
+  </nav>
+  <div class="mt-auto px-4 pb-4">
+    <div class="p-3 rounded-xl" style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2)">
+      <p class="text-xs font-bold mb-1" style="color:var(--primary)">🤖 AI Study Companion</p>
+      <p class="text-xs" style="color:var(--muted);line-height:1.5">Your AI companion is always ready. Ask anything, anytime.</p>
+    </div>
+  </div>
+</aside>
+
+<!-- RIGHT PANEL -->
+<aside class="right-panel">
+  <div class="mb-6">
+    <h4 class="text-sm font-bold mb-3" style="color:var(--muted)">YOUR PROGRESS</h4>
+    <div id="right-progress" class="flex flex-col gap-3"></div>
+  </div>
+  <div class="mb-6">
+    <h4 class="text-sm font-bold mb-3" style="color:var(--muted)">STUDY STREAK</h4>
+    <div class="p-3 rounded-xl" style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2)">
+      <p class="text-2xl font-bold" style="color:var(--primary)" id="streak-display">0 🔥</p>
+      <p class="text-xs mt-1" style="color:var(--muted)">Days in a row</p>
+    </div>
+  </div>
+  <div>
+    <h4 class="text-sm font-bold mb-3" style="color:var(--muted)">AI TIPS FOR YOU</h4>
+    <div id="ai-tips" class="flex flex-col gap-2">
+      <div class="p-3 rounded-xl text-xs" style="background:var(--surface2);color:var(--muted);line-height:1.6">
+        💡 Start with short 25-minute Pomodoro sessions for maximum retention.
+      </div>
+      <div class="p-3 rounded-xl text-xs" style="background:var(--surface2);color:var(--muted);line-height:1.6">
+        🎯 Review flashcards within 24 hours to lock in memory.
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bnav-btn active" data-section="dashboard" onclick="showSection('dashboard')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home
+  </button>
+  <button class="bnav-btn" data-section="courses" onclick="showSection('courses')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>Courses
+  </button>
+  <button class="bnav-btn" data-section="ai-tutor" onclick="showSection('ai-tutor')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Tutor
+  </button>
+  <button class="bnav-btn" data-section="practice" onclick="showSection('practice')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>Practice
+  </button>
+  <button class="bnav-btn" data-section="profile" onclick="showSection('profile')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Me
+  </button>
+</nav>
+
+<!-- MAIN -->
+<main class="app-layout">
+<div class="main-area" style="padding-bottom:80px">
+
+<!-- DASHBOARD -->
+<section id="section-dashboard" class="section">
+  <div class="section-header flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold">Welcome back, <span id="dash-name" style="color:var(--primary)">Scholar</span>!</h2>
+      <p class="text-sm mt-1" style="color:var(--muted)">Here's your personalized learning overview</p>
+    </div>
+    <button onclick="showSection('ai-tutor')" class="btn-primary text-sm">🤖 Ask AI</button>
+  </div>
+  <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-bold" style="color:var(--primary)" id="stat-courses">0</div>
+      <div class="text-xs mt-1" style="color:var(--muted)">Courses Enrolled</div>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-bold" style="color:var(--accent)" id="stat-streak">0</div>
+      <div class="text-xs mt-1" style="color:var(--muted)">Day Streak 🔥</div>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-bold" style="color:var(--secondary)" id="stat-score">0%</div>
+      <div class="text-xs mt-1" style="color:var(--muted)">Avg Quiz Score</div>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-bold" style="color:#fbbf24" id="stat-time">0h</div>
+      <div class="text-xs mt-1" style="color:var(--muted)">Study Time</div>
+    </div>
+  </div>
+  <div class="p-4">
+    <h3 class="font-bold mb-4">Continue Learning</h3>
+    <div id="continue-learning" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="empty"><div class="empty-icon">🏗️</div><p class="text-sm">Enroll in a course to start learning!</p><button onclick="showSection('courses')" class="btn-primary mt-3 px-4 py-2 text-sm">Browse Courses →</button></div>
+    </div>
+  </div>
+  <div class="p-4">
+    <h3 class="font-bold mb-4">🤖 AI Recommendations</h3>
+    <div id="ai-recommendations" class="flex flex-col gap-3">
+      <div class="card p-4 flex items-center gap-3">
+        <div class="text-2xl">📊</div>
+        <div>
+          <p class="text-sm font-semibold">Take a Diagnostic Quiz</p>
+          <p class="text-xs mt-1" style="color:var(--muted)">Let AI build your personalized learning path</p>
+        </div>
+        <button onclick="showSection('practice')" class="btn-primary text-xs px-3 py-2 ml-auto">Start</button>
+      </div>
+      <div class="card p-4 flex items-center gap-3">
+        <div class="text-2xl">📚</div>
+        <div>
+          <p class="text-sm font-semibold">Upload Study Material</p>
+          <p class="text-xs mt-1" style="color:var(--muted)">AI generates flashcards, quizzes &amp; summaries</p>
+        </div>
+        <button onclick="showSection('courses')" class="btn-primary text-xs px-3 py-2 ml-auto">Upload</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COURSES -->
+<section id="section-courses" class="section" style="display:none">
+  <div class="section-header flex items-center justify-between">
+    <h2 class="text-lg font-bold">Course Library</h2>
+    <button onclick="openModal('create-course')" class="btn-primary text-xs px-3 py-2">+ Add Course</button>
+  </div>
+  <div class="flex gap-2 p-4 overflow-x-auto border-b" style="border-color:var(--border)">
+    <button onclick="filterCourses('all')" class="filter-btn btn-primary text-xs px-3 py-1" data-filter="all">All</button>
+    <button onclick="filterCourses('mathematics')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="mathematics">Mathematics</button>
+    <button onclick="filterCourses('science')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="science">Science</button>
+    <button onclick="filterCourses('programming')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="programming">Programming</button>
+    <button onclick="filterCourses('language')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="language">Language</button>
+    <button onclick="filterCourses('business')" class="filter-btn btn-ghost text-xs px-3 py-1" data-filter="business">Business</button>
+  </div>
+  <div id="courses-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+    <div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div>Loading courses…</div>
+  </div>
+</section>
+
+<!-- AI TUTOR -->
+<section id="section-ai-tutor" class="section" style="display:none">
+  <div class="section-header">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--primary)">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold">AI Tutor</h2>
+        <p class="text-xs" style="color:var(--muted)">Powered by GPT-4o · Remembers everything</p>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-3">
+      <button onclick="setTutorMode('guide')" class="tutor-mode-btn btn-primary text-xs px-3 py-2" data-mode="guide">🧠 Guide Me</button>
+      <button onclick="setTutorMode('explain')" class="tutor-mode-btn btn-ghost text-xs px-3 py-2" data-mode="explain">📚 Explain</button>
+      <button onclick="setTutorMode('solve')" class="tutor-mode-btn btn-ghost text-xs px-3 py-2" data-mode="solve">📣 Solve</button>
+    </div>
+  </div>
+  <div id="chat-messages" class="p-4 flex flex-col gap-4" style="min-height:400px;max-height:60vh;overflow-y:auto">
+    <div class="flex gap-3">
+      <div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0">🤖</div>
+      <div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:#D1D5DB;line-height:1.7;max-width:85%">
+        Hello! I'm your AI Tutor powered by GPT-4o. I adapt to your learning style and remember our conversations. What would you like to learn today?
+        <br/><br/>
+        • Ask me to <strong>explain</strong> any concept<br/>
+        • <strong>Quiz</strong> me on a topic<br/>
+        • <strong>Review</strong> my uploaded material<br/>
+        • Help me with a <strong>problem step by step</strong>
+      </div>
+    </div>
+  </div>
+  <div class="p-4 border-t" style="border-color:var(--border)">
+    <div class="flex gap-3">
+      <div id="tutor-avatar" class="avatar-placeholder" style="width:36px;height:36px;font-size:0.8rem;flex-shrink:0">?</div>
+      <div class="flex-1">
+        <textarea id="tutor-input" class="inp" rows="3" placeholder="Ask anything… explain recursion, quiz me on calculus, help with this problem…" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendTutorMessage()"></textarea>
+        <div class="flex gap-2 mt-2">
+          <button onclick="sendTutorMessage()" class="btn-primary text-sm">Send →</button>
+          <button onclick="clearChat()" class="btn-ghost text-xs px-3 py-2">Clear</button>
+          <span class="text-xs ml-auto self-center" style="color:var(--muted)">Ctrl+Enter to send</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="p-4">
+    <p class="text-xs font-bold mb-3" style="color:var(--muted)">QUICK PROMPTS</p>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="quickPrompt('Explain this concept with a simple analogy')" class="post-tag cursor-pointer hover:opacity-80">💡 Simple analogy</button>
+      <button onclick="quickPrompt('Quiz me with 5 questions on this topic')" class="post-tag green cursor-pointer hover:opacity-80">📝 Quiz me</button>
+      <button onclick="quickPrompt('Show me a step-by-step solution')" class="post-tag red cursor-pointer hover:opacity-80">📊 Step by step</button>
+      <button onclick="quickPrompt('What should I study next?')" class="post-tag cursor-pointer hover:opacity-80">🧾 What's next?</button>
+    </div>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="section-practice" class="section" style="display:none">
+  <div class="section-header flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-bold">Practice Arena</h2>
+      <p class="text-xs mt-1" style="color:var(--muted)">AI-generated adaptive questions · Infinite practice</p>
+    </div>
+    <button onclick="generateQuiz()" class="btn-primary text-xs px-3 py-2">✨ Generate Quiz</button>
+  </div>
+  <div class="p-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div>
+        <label class="text-xs mb-1 block" style="color:var(--muted)">Subject</label>
+        <select id="quiz-subject" class="inp" style="cursor:pointer">
+          <option value="mathematics">Mathematics</option>
+          <option value="physics">Physics</option>
+          <option value="chemistry">Chemistry</option>
+          <option value="biology">Biology</option>
+          <option value="computer-science">Computer Science</option>
+          <option value="history">History</option>
+          <option value="economics">Economics</option>
+          <option value="custom">Custom Topic</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs mb-1 block" style="color:var(--muted)">Difficulty</label>
+        <select id="quiz-difficulty" class="inp" style="cursor:pointer">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+          <option value="adaptive">Adaptive (AI decides)</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs mb-1 block" style="color:var(--muted)">Bloom's Level</label>
+        <select id="quiz-blooms" class="inp" style="cursor:pointer">
+          <option value="remember">Remember</option>
+          <option value="understand" selected>Understand</option>
+          <option value="apply">Apply</option>
+          <option value="analyze">Analyze</option>
+          <option value="evaluate">Evaluate</option>
+          <option value="create">Create</option>
+        </select>
+      </div>
+    </div>
+    <div id="quiz-container">
+      <div class="empty"><div class="empty-icon">📝</div><p class="font-bold mb-2">Ready to Practice?</p><p class="text-sm mb-4">Choose your subject and click Generate Quiz</p><button onclick="generateQuiz()" class="btn-primary px-6 py-3">✨ Generate AI Quiz</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOUBTS -->
+<section id="section-doubts" class="section" style="display:none">
+  <div class="section-header flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-bold">Doubt Resolution</h2>
+      <p class="text-xs mt-1" style="color:var(--muted)">AI resolves doubts instantly. Complex ones go to experts.</p>
+    </div>
+    <button onclick="openModal('ask-doubt')" class="btn-primary text-xs px-3 py-2">+ Ask Doubt</button>
+  </div>
+  <div id="doubts-list" class="divide-y" style="border-color:var(--border)">
+    <div class="empty"><div class="empty-icon">💡</div>Loading doubts…</div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section id="section-community" class="section" style="display:none">
+  <div class="section-header flex items-center justify-between">
+    <h2 class="text-lg font-bold">Community Feed</h2>
+    <button onclick="openModal('create-post')" class="btn-primary text-xs px-3 py-2">+ Post</button>
+  </div>
+  <div class="p-4 border-b" style="border-color:var(--border)">
+    <div class="flex gap-3">
+      <div id="feed-quick-avatar" class="avatar-placeholder" style="width:40px;height:40px;font-size:0.9rem;flex-shrink:0">?</div>
+      <button onclick="openModal('create-post')" class="flex-1 text-left px-4 py-3 rounded-xl text-sm cursor-pointer" style="background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--muted)">
+        Share a question, tip, or discussion…
+      </button>
+    </div>
+  </div>
+  <div id="feed-list" class="divide-y" style="border-color:var(--border)">
+    <div class="empty"><div class="empty-icon">📡</div>Loading feed…</div>
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section id="section-profile" class="section" style="display:none">
+  <div id="profile-content"><div class="empty"><div class="empty-icon">👤</div>Loading profile…</div></div>
+</section>
+
+</div>
+</main>
+
+<!-- MODALS -->
+
+<!-- Create Course -->
+<div class="overlay" id="modal-create-course">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">Add Course</h3>
+      <button onclick="closeModal('create-course')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Course Title *</label><input type="text" id="c-title" class="inp" placeholder="e.g. Advanced Calculus"/></div>
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Description *</label><textarea id="c-desc" class="inp" rows="3" placeholder="What will students learn?"></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Subject</label><select id="c-subject" class="inp" style="cursor:pointer"><option value="mathematics">Mathematics</option><option value="physics">Physics</option><option value="chemistry">Chemistry</option><option value="biology">Biology</option><option value="computer-science">Computer Science</option><option value="language">Language</option><option value="business">Business</option><option value="other">Other</option></select></div>
+        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Level</label><select id="c-level" class="inp" style="cursor:pointer"><option value="beginner">Beginner</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option></select></div>
+      </div>
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Topics (comma separated)</label><input type="text" id="c-topics" class="inp" placeholder="Differentiation, Integration, Limits…"/></div>
+      <div class="flex justify-end gap-3 mt-2">
+        <button class="btn-ghost" onclick="closeModal('create-course')">Cancel</button>
+        <button class="btn-primary" onclick="submitCourse()">Publish Course →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ask Doubt -->
+<div class="overlay" id="modal-ask-doubt">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">Ask a Doubt</h3>
+      <button onclick="closeModal('ask-doubt')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Your Question *</label><textarea id="d-question" class="inp" rows="4" placeholder="Describe your doubt clearly. The AI will try to resolve it instantly!"></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Subject</label><select id="d-subject" class="inp" style="cursor:pointer"><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>Computer Science</option><option>Other</option></select></div>
+        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Urgency</label><select id="d-urgency" class="inp" style="cursor:pointer"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High (Exam Soon)</option></select></div>
+      </div>
+      <div class="flex justify-end gap-3 mt-2">
+        <button class="btn-ghost" onclick="closeModal('ask-doubt')">Cancel</button>
+        <button class="btn-primary" onclick="submitDoubt()">Ask AI →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Post -->
+<div class="overlay" id="modal-create-post">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">Share with Community</h3>
+      <button onclick="closeModal('create-post')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <textarea id="post-content" class="inp" rows="4" placeholder="Share a tip, question, or learning update…"></textarea>
+      <input type="text" id="post-tags" class="inp" placeholder="Tags: mathematics, calculus, tips…"/>
+      <div class="flex justify-end gap-3 mt-2">
+        <button class="btn-ghost" onclick="closeModal('create-post')">Cancel</button>
+        <button class="btn-primary" onclick="submitPost()">Post →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile -->
+<div class="overlay" id="modal-edit-profile">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold">Edit Profile</h3>
+      <button onclick="closeModal('edit-profile')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Display Name</label><input type="text" id="ep-name" class="inp" placeholder="Your full name"/></div>
+        <div><label class="text-xs mb-1 block" style="color:var(--muted)">Role</label><select id="ep-role" class="inp" style="cursor:pointer"><option value="student">Student</option><option value="educator">Educator</option><option value="researcher">Researcher</option></select></div>
+      </div>
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Bio</label><textarea id="ep-bio" class="inp" rows="3" placeholder="Tell the community about yourself…"></textarea></div>
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Institution / University</label><input type="text" id="ep-institution" class="inp" placeholder="e.g. IIT Bombay, MIT…"/></div>
+      <div><label class="text-xs mb-1 block" style="color:var(--muted)">Skills (comma separated)</label><input type="text" id="ep-skills" class="inp" placeholder="Machine Learning, Python, Calculus…"/></div>
+      <div class="flex justify-end gap-3 mt-2">
+        <button class="btn-ghost" onclick="closeModal('edit-profile')">Cancel</button>
+        <button class="btn-primary" onclick="saveProfile()">Save Profile →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+firebase.initializeApp(window.FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const FieldValue = firebase.firestore.FieldValue;
+
+let currentUser = null;
+let currentUserData = null;
+let currentSection = "dashboard";
+let chatHistory = [];
+let tutorMode = "guide";
+let allCourses = [];
+let courseFilter = "all";
+
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = "index.html"; return; }
+  currentUser = user;
+  const snap = await db.collection("users").doc(user.uid).get();
+  if (snap.exists) {
+    currentUserData = snap.data();
+  } else {
+    currentUserData = {
+      uid: user.uid, displayName: user.displayName || "Scholar",
+      email: user.email, photoURL: user.photoURL || "",
+      role: "student", bio: "", institution: "", skills: [],
+      studyStreak: 0, coursesEnrolled: 0, totalStudyTime: 0
+    };
+    await db.collection("users").doc(user.uid).set({...currentUserData, createdAt: FieldValue.serverTimestamp()});
+  }
+  updateNavUser();
+  document.getElementById("loading-screen").style.display = "none";
+  showSection("dashboard");
+});
+
+function updateNavUser() {
+  const name = currentUserData?.displayName || "Scholar";
+  document.getElementById("nav-name").textContent = name.split(" ")[0];
+  const initials = name.split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase();
+  document.getElementById("nav-avatar").textContent = initials;
+  document.getElementById("tutor-avatar").textContent = initials;
+  document.getElementById("feed-quick-avatar").textContent = initials;
+  document.getElementById("dash-name").textContent = name.split(" ")[0];
+}
+
+function showSection(name) {
+  currentSection = name;
+  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
+  const sec = document.getElementById("section-" + name);
+  if (sec) sec.style.display = "block";
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.section === name));
+  document.querySelectorAll(".bnav-btn").forEach(n => n.classList.toggle("active", n.dataset.section === name));
+  if (name === "dashboard") loadDashboard();
+  if (name === "courses") loadCourses();
+  if (name === "doubts") loadDoubts();
+  if (name === "community") loadFeed();
+  if (name === "profile") loadProfile();
+}
+
+function toast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast show " + type;
+  setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+function avatarHTML(user, size=40) {
+  const name = user?.displayName || user?.authorName || "U";
+  const initials = name.split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase();
+  const photo = user?.photoURL || user?.authorPhoto || "";
+  if (photo) return `<img src="${photo}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'"/>`;
+  return `<div class="avatar-placeholder" style="width:${size}px;height:${size}px;font-size:${size*0.35}px">${initials}</div>`;
+}
+
+function timeAgo(ts) {
+  if (!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+async function loadDashboard() {
+  if (!currentUser) return;
+  const snap = await db.collection("users").doc(currentUser.uid).get();
+  if (snap.exists) currentUserData = snap.data();
+  document.getElementById("stat-courses").textContent = currentUserData?.coursesEnrolled || 0;
+  document.getElementById("stat-streak").textContent = currentUserData?.studyStreak || 0;
+  document.getElementById("stat-time").textContent = (currentUserData?.totalStudyTime || 0) + "h";
+  document.getElementById("stat-score").textContent = (currentUserData?.avgScore || 0) + "%";
+  document.getElementById("streak-display").textContent = (currentUserData?.studyStreak || 0) + " 🔥";
+}
+
+async function loadCourses() {
+  const el = document.getElementById("courses-list");
+  try {
+    const snap = await db.collection("courses").orderBy("createdAt","desc").limit(30).get();
+    allCourses = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderCourses();
+  } catch(e) { el.innerHTML = `<div class="empty text-red-400">Error: ${e.message}</div>`; }
+}
+
+function filterCourses(f) {
+  courseFilter = f;
+  document.querySelectorAll(".filter-btn").forEach(b => {
+    b.className = b.dataset.filter === f ? "filter-btn btn-primary text-xs px-3 py-1" : "filter-btn btn-ghost text-xs px-3 py-1";
+  });
+  renderCourses();
+}
+
+function renderCourses() {
+  const el = document.getElementById("courses-list");
+  const filtered = courseFilter === "all" ? allCourses : allCourses.filter(c => c.subject === courseFilter);
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><p class="font-bold mb-2">No courses yet</p><button class="btn-primary mt-3 px-4 py-2 text-sm" onclick="openModal('create-course')">Add First Course →</button></div>`;
+    return;
+  }
+  el.innerHTML = "";
+  filtered.forEach(c => el.appendChild(buildCourseCard(c)));
+}
+
+function buildCourseCard(c) {
+  const div = document.createElement("div");
+  div.className = "card card-hover course-card";
+  const topics = (c.topics||[]).slice(0,3).map(t=>`<span class="tech-tag">${t}</span>`).join("");
+  const levelColor = {beginner:"badge-green",intermediate:"badge-blue",advanced:"badge-red"}[c.level]||"badge-blue";
+  div.innerHTML = `
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <div>
+        <h3 class="font-bold text-base leading-tight">${escHtml(c.title||"")}</h3>
+        <div class="flex items-center gap-2 mt-1">
+          ${avatarHTML(c,20)}
+          <span class="text-xs" style="color:var(--muted)">${c.authorName||""} · ${timeAgo(c.createdAt)}</span>
+        </div>
+      </div>
+      <span class="badge ${levelColor}">${c.level||"course"}</span>
+    </div>
+    <p class="text-sm mb-3" style="color:#9CA3AF;line-height:1.6">${escHtml((c.description||"").slice(0,150))}${(c.description||"").length>150?"&hellip;":""}</p>
+    <div class="mb-3">${topics}</div>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="enrollCourse('${c.id}')" class="btn-primary text-xs px-3 py-2">→ Enroll</button>
+      <button onclick="askAboutCourse('${c.id}')" class="btn-ghost text-xs px-3 py-2">🤖 Ask AI</button>
+      ${c.authorId===currentUser?.uid?`<button onclick="deleteCourse('${c.id}')" class="action-btn text-red-400 text-xs ml-auto">Delete</button>`:""}
+    </div>`;
+  return div;
+}
+
+async function enrollCourse(courseId) {
+  if (!currentUser) return;
+  const course = allCourses.find(c => c.id === courseId);
+  if (!course) return;
+  try {
+    await db.collection("enrollments").add({
+      userId: currentUser.uid,
+      courseId: courseId,
+      courseTitle: course.title,
+      progress: 0,
+      enrolledAt: FieldValue.serverTimestamp()
+    });
+    await db.collection("users").doc(currentUser.uid).update({ coursesEnrolled: FieldValue.increment(1) });
+    toast("🎉 Enrolled in " + course.title + "!", "success");
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+async function askAboutCourse(courseId) {
+  const course = allCourses.find(c => c.id === courseId);
+  if (!course) return;
+  showSection("ai-tutor");
+  document.getElementById("tutor-input").value = "Tell me about the course: " + course.title + ". What topics does it cover and how should I approach learning it?";
+}
+
+async function deleteCourse(id) {
+  if (!confirm("Delete this course?")) return;
+  await db.collection("courses").doc(id).delete();
+  toast("Course deleted"); loadCourses();
+}
+
+async function submitCourse() {
+  const title = document.getElementById("c-title").value.trim();
+  const desc = document.getElementById("c-desc").value.trim();
+  const subject = document.getElementById("c-subject").value;
+  const level = document.getElementById("c-level").value;
+  const topicsRaw = document.getElementById("c-topics").value.trim();
+  if (!title || !desc) return toast("Title and description required", "error");
+  const topics = topicsRaw ? topicsRaw.split(",").map(t=>t.trim()).filter(Boolean) : [];
+  try {
+    await db.collection("courses").add({
+      authorId: currentUser.uid,
+      authorName: currentUserData?.displayName || "Educator",
+      authorPhoto: currentUser.photoURL || "",
+      title, description: desc, subject, level, topics,
+      enrolledCount: 0, rating: 0,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    closeModal("create-course");
+    ["c-title","c-desc","c-topics"].forEach(id => document.getElementById(id).value="");
+    toast("📚 Course published!", "success");
+    loadCourses();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function setTutorMode(mode) {
+  tutorMode = mode;
+  document.querySelectorAll(".tutor-mode-btn").forEach(b => {
+    b.className = b.dataset.mode === mode ? "tutor-mode-btn btn-primary text-xs px-3 py-2" : "tutor-mode-btn btn-ghost text-xs px-3 py-2";
+  });
+}
+
+function quickPrompt(text) {
+  document.getElementById("tutor-input").value = text;
+  document.getElementById("tutor-input").focus();
+}
+
+function addMessage(role, content) {
+  const chat = document.getElementById("chat-messages");
+  const div = document.createElement("div");
+  div.className = "flex gap-3";
+  const isAI = role === "assistant";
+  const avatarContent = isAI ? "🤖" : (currentUserData?.displayName||"U").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase();
+  div.innerHTML = `
+    <div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;${isAI?"background:var(--primary)":""}">${avatarContent}</div>
+    <div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:#D1D5DB;line-height:1.7;max-width:85%;white-space:pre-wrap">${escHtml(content)}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  chatHistory.push({role, content});
+}
+
+async function sendTutorMessage() {
+  const input = document.getElementById("tutor-input");
+  const msg = input.value.trim();
+  if (!msg) return;
+  addMessage("user", msg);
+  input.value = "";
+  const modePrompts = {
+    guide: "You are a Socratic AI tutor. Guide the student to discover answers through questions rather than giving direct answers. Be encouraging and personalized.",
+    explain: "You are an expert AI tutor. Explain concepts clearly with examples, analogies, and structured breakdowns. Adapt your language to the student's level.",
+    solve: "You are an AI tutor. Provide detailed step-by-step solutions with explanations for each step. Show your work clearly."
+  };
+  const systemPrompt = modePrompts[tutorMode] || modePrompts.explain;
+  const thinkingDiv = document.createElement("div");
+  thinkingDiv.className = "flex gap-3";
+  thinkingDiv.innerHTML = `<div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;background:var(--primary)">🤖</div><div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:var(--muted)">Thinking…</div>`;
+  document.getElementById("chat-messages").appendChild(thinkingDiv);
+  try {
+    const apiKey = (typeof OPENAI_API_KEY !== "undefined") ? OPENAI_API_KEY : null;
+    if (!apiKey) {
+      thinkingDiv.remove();
+      addMessage("assistant", "I need an OpenAI API key to respond. Please add your OPENAI_API_KEY in the app settings.\n\nFor now, here's a demo response:\n\nGreat question! I'm your AI tutor and I'm here to help you learn. Once you configure your OpenAI API key, I'll be able to:\n• Give personalized explanations\n• Quiz you adaptively\n• Solve problems step-by-step\n• Remember our entire conversation history");
+      return;
+    }
+    const messages = [{role:"system",content:systemPrompt},...chatHistory.slice(-10).map(m=>({role:m.role,content:m.content})),{role:"user",content:msg}];
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
+      body: JSON.stringify({model:"gpt-4o",messages,temperature:0.7,max_tokens:800})
+    });
+    const data = await resp.json();
+    thinkingDiv.remove();
+    const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response.";
+    addMessage("assistant", reply);
+  } catch(e) {
+    thinkingDiv.remove();
+    addMessage("assistant", "Connection error. Please check your API key configuration.");
+  }
+}
+
+function clearChat() {
+  const chat = document.getElementById("chat-messages");
+  chat.innerHTML = `<div class="flex gap-3"><div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;background:var(--primary)">🤖</div><div class="p-3 rounded-xl text-sm" style="background:var(--surface2);color:#D1D5DB;line-height:1.7;max-width:85%">Chat cleared! I'm ready for a fresh start. What would you like to learn?</div></div>`;
+  chatHistory = [];
+}
+
+async function generateQuiz() {
+  const subject = document.getElementById("quiz-subject").value;
+  const difficulty = document.getElementById("quiz-difficulty").value;
+  const blooms = document.getElementById("quiz-blooms").value;
+  const container = document.getElementById("quiz-container");
+  container.innerHTML = `<div class="empty"><div class="empty-icon spin">✨</div><p>Generating ${difficulty} ${subject} quiz at ${blooms} level…</p></div>`;
+  const sampleQuestions = [
+    { q: "What is the derivative of x² + 3x?", opts: ["2x + 3", "x + 3", "2x", "x² + 3"], ans: 0 },
+    { q: "Which data structure uses LIFO?", opts: ["Queue", "Stack", "Array", "Tree"], ans: 1 },
+    { q: "What is Newton's 2nd Law?", opts: ["F = ma", "E = mc²", "v = u + at", "P = mv"], ans: 0 }
+  ];
+  setTimeout(() => {
+    let html = `<div class="flex flex-col gap-4">`;
+    sampleQuestions.forEach((q, i) => {
+      html += `<div class="card p-4"><p class="font-semibold mb-3">Q${i+1}. ${q.q}</p><div class="grid grid-cols-2 gap-2">`;
+      q.opts.forEach((opt, j) => {
+        html += `<button onclick="selectAnswer(${i},${j},${q.ans})" class="quiz-opt-${i} text-sm p-2 rounded-lg border transition-all text-left" style="border-color:var(--border2);background:rgba(255,255,255,0.02)">${opt}</button>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `<button onclick="generateQuiz()" class="btn-primary w-full py-3">✨ Generate New Quiz</button></div>`;
+    container.innerHTML = html;
+  }, 1500);
+}
+
+function selectAnswer(qIndex, selected, correct) {
+  const btns = document.querySelectorAll(".quiz-opt-" + qIndex);
+  btns.forEach((btn, i) => {
+    btn.style.background = i === correct ? "rgba(78,205,196,0.2)" : (i === selected && selected !== correct ? "rgba(255,107,107,0.2)" : "rgba(255,255,255,0.02)");
+    btn.style.borderColor = i === correct ? "var(--accent)" : (i === selected && selected !== correct ? "var(--secondary)" : "var(--border2)");
+    btn.disabled = true;
+  });
+  if (selected === correct) toast("✅ Correct!", "success");
+  else toast("❌ Incorrect. The correct answer is highlighted.", "error");
+}
+
+async function loadDoubts() {
+  const el = document.getElementById("doubts-list");
+  try {
+    const snap = await db.collection("doubts").orderBy("createdAt","desc").limit(20).get();
+    if (snap.empty) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">💡</div><p class="font-bold mb-2">No doubts yet</p><button class="btn-primary mt-3 px-5 py-3 text-sm" onclick="openModal('ask-doubt')">Ask First Doubt →</button></div>`;
+      return;
+    }
+    el.innerHTML = "";
+    snap.forEach(doc => {
+      const d = {id:doc.id,...doc.data()};
+      const div = document.createElement("div");
+      div.className = "p-4 hover:bg-white/2 transition-colors";
+      div.innerHTML = `
+        <div class="flex gap-3">
+          ${avatarHTML(d,36)}
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-sm font-semibold">${d.authorName||""}</span>
+              <span class="badge badge-blue">${d.subject||""}</span>
+              <span class="text-xs" style="color:var(--muted)">${timeAgo(d.createdAt)}</span>
+            </div>
+            <p class="text-sm mb-2" style="color:#D1D5DB;line-height:1.6">${escHtml(d.question||"")}</p>
+            ${d.aiAnswer?`<div class="comment"><p class="text-xs font-bold mb-1" style="color:var(--primary)">🤖 AI Answer</p><p class="text-sm" style="color:#D1D5DB;line-height:1.6">${escHtml(d.aiAnswer)}</p></div>`:""}
+            <div class="flex gap-3 mt-2">
+              <span class="text-xs" style="color:var(--muted)">${d.answersCount||0} answers</span>
+              ${d.authorId===currentUser?.uid?`<button onclick="deleteDoubt('${d.id}')" class="action-btn text-red-400 text-xs">Delete</button>`:""}
+            </div>
+          </div>
+        </div>`;
+      el.appendChild(div);
+    });
+  } catch(e) { el.innerHTML = `<div class="empty text-red-400">Error: ${e.message}</div>`; }
+}
+
+async function submitDoubt() {
+  const question = document.getElementById("d-question").value.trim();
+  const subject = document.getElementById("d-subject").value;
+  const urgency = document.getElementById("d-urgency").value;
+  if (!question) return toast("Please describe your doubt", "error");
+  try {
+    const docRef = await db.collection("doubts").add({
+      authorId: currentUser.uid,
+      authorName: currentUserData?.displayName || "Student",
+      authorPhoto: currentUser.photoURL || "",
+      question, subject, urgency,
+      aiAnswer: "AI-powered answer will appear here once OpenAI API is configured.",
+      answersCount: 0, solved: false,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    closeModal("ask-doubt");
+    document.getElementById("d-question").value = "";
+    toast("💡 Doubt submitted! AI is analyzing...", "success");
+    loadDoubts();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+async function deleteDoubt(id) {
+  if (!confirm("Delete this doubt?")) return;
+  await db.collection("doubts").doc(id).delete();
+  toast("Deleted"); loadDoubts();
+}
+
+async function loadFeed() {
+  const el = document.getElementById("feed-list");
+  try {
+    const snap = await db.collection("posts").orderBy("createdAt","desc").limit(20).get();
+    if (snap.empty) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">🌱</div><p class="font-bold mb-2">No posts yet</p><p class="text-sm">Be the first to share!</p></div>`;
+      return;
+    }
+    el.innerHTML = "";
+    snap.forEach(doc => {
+      const p = {id:doc.id,...doc.data()};
+      el.appendChild(buildPostCard(p));
+    });
+  } catch(e) { el.innerHTML = `<div class="empty text-red-400">Error: ${e.message}</div>`; }
+}
+
+function buildPostCard(p) {
+  const div = document.createElement("div");
+  div.className = "post-card";
+  const tags = (p.tags||[]).map(t=>`<span class="post-tag">#${t}</span>`).join("");
+  div.innerHTML = `
+    <div class="flex gap-3">
+      ${avatarHTML(p,40)}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-semibold text-sm">${p.authorName||"Scholar"}</span>
+          <span class="text-xs" style="color:var(--muted)">${timeAgo(p.createdAt)}</span>
+        </div>
+        <p class="post-content">${escHtml(p.content||"")}</p>
+        <div class="mb-2">${tags}</div>
+        <div class="flex items-center gap-1">
+          <button onclick="toggleLike('${p.id}',this)" class="action-btn like-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span class="like-count">${p.likesCount||0}</span>
+          </button>
+          ${p.authorId===currentUser?.uid?`<button onclick="deletePost('${p.id}')" class="action-btn text-red-400 text-xs ml-auto">Delete</button>`:""}
+        </div>
+      </div>
+    </div>`;
+  return div;
+}
+
+async function toggleLike(postId, btn) {
+  if (!currentUser) return;
+  const likeRef = db.collection("likes").doc(`${postId}_${currentUser.uid}`);
+  const postRef = db.collection("posts").doc(postId);
+  const snap = await likeRef.get();
+  const countEl = btn.querySelector(".like-count");
+  if (snap.exists) {
+    await likeRef.delete();
+    await postRef.update({likesCount: FieldValue.increment(-1)});
+    btn.classList.remove("liked");
+    countEl.textContent = Math.max(0, parseInt(countEl.textContent)-1);
+  } else {
+    await likeRef.set({postId, userId:currentUser.uid, createdAt:FieldValue.serverTimestamp()});
+    await postRef.update({likesCount: FieldValue.increment(1)});
+    btn.classList.add("liked");
+    countEl.textContent = parseInt(countEl.textContent)+1;
+  }
+}
+
+async function deletePost(id) {
+  if (!confirm("Delete post?")) return;
+  await db.collection("posts").doc(id).delete();
+  toast("Deleted"); loadFeed();
+}
+
+async function submitPost() {
+  const content = document.getElementById("post-content").value.trim();
+  const tagsRaw = document.getElementById("post-tags").value.trim();
+  if (!content) return toast("Please write something", "error");
+  const tags = tagsRaw ? tagsRaw.split(",").map(t=>t.trim().replace("#","")).filter(Boolean) : [];
+  try {
+    await db.collection("posts").add({
+      authorId: currentUser.uid,
+      authorName: currentUserData?.displayName || "Scholar",
+      authorPhoto: currentUser.photoURL || "",
+      content, tags, likesCount: 0,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    closeModal("create-post");
+    document.getElementById("post-content").value = "";
+    document.getElementById("post-tags").value = "";
+    toast("🎉 Posted!", "success");
+    loadFeed();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+  }
+
+async function loadProfile() {
+  if (!currentUser) return;
+  const snap = await db.collection("users").doc(currentUser.uid).get();
+  const u = snap.exists ? snap.data() : currentUserData;
+  if (snap.exists) currentUserData = snap.data();
+  const el = document.getElementById("profile-content");
+  const skills = (u?.skills||[]).map(s=>`<span class="tech-tag">${s}</span>`).join("");
+  const postsSnap = await db.collection("posts").where("authorId","==",currentUser.uid).orderBy("createdAt","desc").limit(10).get();
+  el.innerHTML = `
+    <div style="height:120px;background:linear-gradient(135deg,rgba(108,99,255,0.3),rgba(78,205,196,0.2));position:relative">
+      <div style="position:absolute;bottom:-32px;left:1.5rem">
+        <div style="width:80px;height:80px;border-radius:50%;border:4px solid var(--navy);overflow:hidden;background:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:1.5rem;color:#fff">
+          ${u?.photoURL?`<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover"/>`:((u?.displayName||"U").split(" ").map(n=>n[0]).slice(0,2).join("").toUpperCase())}
+        </div>
+      </div>
+      <button onclick="openEditProfile()" class="absolute bottom-3 right-4 btn-ghost text-xs px-3 py-2">✏️ Edit Profile</button>
+    </div>
+    <div class="px-6 pt-12 pb-4">
+      <h2 class="text-2xl font-bold">${escHtml(u?.displayName||"Scholar")}</h2>
+      <p class="text-sm mt-1" style="color:var(--muted)">
+        <span class="badge badge-blue">${u?.role||"Student"}</span>
+        ${u?.institution?` · ${u.institution}`:""}
+      </p>
+      ${u?.bio?`<p class="text-sm mt-3 max-w-lg" style="color:#D1D5DB;line-height:1.65">${escHtml(u.bio)}</p>`:""}
+      <div class="flex gap-6 mt-5 py-4 border-t border-b" style="border-color:var(--border)">
+        <div class="profile-stat"><div class="profile-stat-num">${postsSnap.size}</div><div class="profile-stat-lbl">Posts</div></div>
+        <div class="profile-stat"><div class="profile-stat-num">${u?.coursesEnrolled||0}</div><div class="profile-stat-lbl">Courses</div></div>
+        <div class="profile-stat"><div class="profile-stat-num">${u?.studyStreak||0}</div><div class="profile-stat-lbl">Day Streak</div></div>
+        <div class="profile-stat"><div class="profile-stat-num">${u?.totalStudyTime||0}h</div><div class="profile-stat-lbl">Study Time</div></div>
+      </div>
+      ${skills?`<div class="mt-4"><p class="text-xs font-bold mb-2" style="color:var(--muted)">SKILLS</p><div class="flex flex-wrap gap-1">${skills}</div></div>":""}
+    </div>
+    <div class="px-6 pb-6">
+      <h3 class="font-bold mb-4 text-sm">RECENT POSTS</h3>
+      <div class="flex flex-col gap-3">
+        ${postsSnap.empty?"<p class='text-sm' style='color:var(--muted)'>No posts yet. Share something with the community!</p>":postsSnap.docs.map(d=>{const p=d.data();return `<div class="card p-4"><p class="text-sm mb-2" style="color:#D1D5DB;line-height:1.6">${escHtml((p.content||"").slice(0,150))}...</p><p class="text-xs" style="color:var(--muted)">${timeAgo(p.createdAt)}</p></div>`;}).join("")}
+      </div>
+    </div>`;
+}
+
+function openEditProfile() {
+  const u = currentUserData;
+  if (!u) return;
+  document.getElementById("ep-name").value = u.displayName||"";
+  document.getElementById("ep-role").value = u.role||"student";
+  document.getElementById("ep-bio").value = u.bio||"";
+  document.getElementById("ep-institution").value = u.institution||"";
+  document.getElementById("ep-skills").value = (u.skills||[]).join(", ");
+  openModal("edit-profile");
+}
+
+async function saveProfile() {
+  const data = {
+    displayName: document.getElementById("ep-name").value.trim() || currentUserData?.displayName,
+    role: document.getElementById("ep-role").value,
+    bio: document.getElementById("ep-bio").value.trim(),
+    institution: document.getElementById("ep-institution").value.trim(),
+    skills: document.getElementById("ep-skills").value.split(",").map(s=>s.trim()).filter(Boolean)
+  };
+  try {
+    await db.collection("users").doc(currentUser.uid).update(data);
+    await currentUser.updateProfile({displayName: data.displayName});
+    currentUserData = {...currentUserData,...data};
+    updateNavUser();
+    closeModal("edit-profile");
+    toast("✅ Profile updated!", "success");
+    loadProfile();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function openModal(name) {
+  document.getElementById("modal-"+name).classList.add("open");
+}
+function closeModal(name) {
+  document.getElementById("modal-"+name).classList.remove("open");
+}
+document.querySelectorAll(".overlay").forEach(o => {
+  o.addEventListener("click", e => { if(e.target===o) o.classList.remove("open"); });
+});
+
+async function signOut() {
+  if (!confirm("Sign out?")) return;
+  await auth.signOut();
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>
