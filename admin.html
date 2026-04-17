@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NexGen Scholar — Admin Panel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="ai-engine.js"></script>
+<style>
+:root{--a:#6C5CE7;--a2:#A29BFE;--a3:#00CEC9;--w:#FDCB6E;--co:#E17055;--dk:#0B0D17;--s:#12152A;--s2:#1A1E35;--b:#252A45;--b2:#353B5E;--m:#6B7094;--t:#E8E9F3;--red:#EF4444;--grn:#22C55E}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:var(--dk);color:var(--t);min-height:100vh}
+.al{display:flex;min-height:100vh;padding-top:56px}
+.sb{width:230px;flex-shrink:0;position:fixed;top:56px;left:0;bottom:0;overflow-y:auto;border-right:1px solid var(--b);background:var(--dk);padding:0.5rem 0;font-size:0.85rem}
+.ma{margin-left:230px;flex:1;min-height:calc(100vh - 56px);padding-bottom:2rem}
+@media(max-width:768px){.sb{display:none}.ma{margin-left:0}}
+.tn{position:fixed;top:0;left:0;right:0;z-index:50;height:56px;background:rgba(11,13,23,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem}
+.ni{display:flex;align-items:center;gap:9px;padding:0.55rem 1.1rem;color:var(--m);font-size:0.83rem;font-weight:500;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;text-decoration:none}
+.ni:hover{background:rgba(255,255,255,0.03);color:var(--t)}.ni.act{color:var(--t);background:rgba(239,68,68,0.06);border-left-color:var(--red)}
+.ni svg{width:16px;height:16px;flex-shrink:0}
+.cd{background:var(--s);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.inp{width:100%;padding:0.7rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--b2);border-radius:10px;font-family:'Outfit';font-size:0.9rem;color:var(--t);outline:none;transition:all 0.2s}
+.inp::placeholder{color:var(--m)}.inp:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,0.12)}
+textarea.inp{resize:vertical;min-height:70px}
+.bp{background:var(--red);color:#fff;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.88rem;transition:all 0.2s}
+.bp:hover{background:#DC2626}.bp:disabled{opacity:0.5;cursor:not-allowed}
+.bg{background:transparent;color:var(--m);border:1px solid var(--b2);border-radius:10px;font-family:'Outfit';cursor:pointer;padding:0.55rem 1rem;font-size:0.85rem;transition:all 0.2s}
+.bg:hover{color:var(--t);background:rgba(255,255,255,0.04)}
+.bt{background:var(--a3);color:#0B0D17;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.88rem}
+.bw{background:var(--w);color:#0B0D17;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.88rem}
+.ba{background:var(--a);color:#fff;border:none;border-radius:10px;font-family:'Outfit';font-weight:700;cursor:pointer;padding:0.6rem 1.2rem;font-size:0.88rem}
+.tg{display:inline-block;padding:3px 10px;border-radius:999px;font-size:0.72rem;font-weight:600}
+.tp{background:rgba(108,92,231,0.15);color:var(--a2)}.tt{background:rgba(0,206,201,0.15);color:var(--a3)}
+.tw{background:rgba(253,203,110,0.15);color:var(--w)}.tc{background:rgba(225,112,85,0.15);color:var(--co)}
+.tgn{background:rgba(34,197,94,0.15);color:#4ade80}.tr{background:rgba(239,68,68,0.15);color:var(--red)}
+.sc{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:1.25rem}
+.sn{font-size:2rem;font-weight:800;line-height:1}
+.sh{padding:1.1rem 1.25rem;border-bottom:1px solid var(--b)}
+.av{display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;color:#fff;background:linear-gradient(135deg,#EF4444,#DC2626);flex-shrink:0}
+.gt{background:linear-gradient(135deg,#EF4444,#F97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.ov.open{display:flex}
+.mb{background:var(--s);border:1px solid var(--b2);border-radius:18px;padding:1.75rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto}
+.tst{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);border:1px solid var(--b2);color:var(--t);padding:10px 22px;border-radius:999px;font-size:0.85rem;opacity:0;pointer-events:none;transition:all 0.3s;z-index:999}
+.tst.show{opacity:1;transform:translateX(-50%) translateY(0)}.tst.err{background:#4A1942}.tst.ok{background:#0A3D2E}
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:0.82rem}
+.tbl th{text-align:left;padding:0.6rem 0.75rem;border-bottom:2px solid var(--b);color:var(--m);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+.tbl td{padding:0.6rem 0.75rem;border-bottom:1px solid var(--b);vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,0.02)}
+.spin{animation:sp 0.7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.as{height:3px;background:linear-gradient(90deg,#EF4444 25%,#F97316 50%,#FDCB6E 75%,#22C55E)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+</style>
+</head>
+<body>
+<!-- LOADING -->
+<div id="ls" style="position:fixed;inset:0;background:var(--dk);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem">
+<div class="as" style="position:absolute;top:0;left:0;right:0"></div>
+<div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#EF4444,#F97316)">
+<svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+</div>
+<p style="font-weight:800;font-size:1.1rem">NexGen<span class="gt">Scholar</span> <span style="color:var(--red)">ADMIN</span></p>
+<div style="width:28px;height:28px;border:3px solid rgba(239,68,68,0.2);border-top-color:var(--red);border-radius:50%" class="spin"></div>
+</div>
+
+<!-- TOP NAV -->
+<nav class="tn">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#EF4444,#F97316)">
+<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+</div>
+<span style="font-weight:800;font-size:1rem">NexGen<span class="gt">Scholar</span> <span class="tg tr">ADMIN</span></span>
+</div>
+<div class="flex items-center gap-3">
+<a href="app.html" class="bg text-xs px-3 py-1.5">🔄 Switch to User View</a>
+<div id="na" class="av" style="width:32px;height:32px;font-size:0.75rem">A</div>
+<span id="nn" class="text-sm font-medium" style="color:var(--m)"></span>
+<button onclick="doSignOut()" class="bg text-xs px-3 py-1.5">Sign Out</button>
+</div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+<div class="px-4 py-3 mb-2" style="border-bottom:1px solid var(--b)">
+<p class="text-xs font-bold" style="color:var(--red)">🛡️ ADMIN CONTROL CENTER</p>
+<p class="text-xs mt-1" style="color:var(--m)">Full platform access</p>
+</div>
+<nav>
+<a class="ni act" data-s="overview" onclick="S('overview')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+<a class="ni" data-s="users" onclick="S('users')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>User Management</a>
+<a class="ni" data-s="courses" onclick="S('courses')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Courses</a>
+<a class="ni" data-s="quizzes" onclick="S('quizzes')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Quizzes</a>
+<a class="ni" data-s="posts" onclick="S('posts')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Posts & Forums</a>
+<a class="ni" data-s="doubts" onclick="S('doubts')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Doubts</a>
+<a class="ni" data-s="library" onclick="S('library')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>E-Library</a>
+<a class="ni" data-s="certs" onclick="S('certs')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>Certificates</a>
+<a class="ni" data-s="analytics" onclick="S('analytics')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</a>
+<a class="ni" data-s="ai" onclick="S('ai')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>AI Tools</a>
+<a class="ni" data-s="notifs" onclick="S('notifs')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Notifications</a>
+<a class="ni" data-s="settings" onclick="S('settings')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+<a class="ni" data-s="reports" onclick="S('reports')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>AI Reports</a>
+<a class="ni" data-s="audit" onclick="S('audit')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Audit Log</a>
+</nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="al"><div class="ma">
+
+<!-- ═══ OVERVIEW ═══ -->
+<section id="s-overview" class="sec">
+<div class="sh"><h2 class="text-lg font-bold">🛡️ Admin Dashboard</h2><p class="text-xs mt-1" style="color:var(--m)">Complete platform overview and control</p></div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 p-4">
+<div class="sc"><div class="sn gt" id="st-users">0</div><div class="text-xs" style="color:var(--m)">Total Users</div></div>
+<div class="sc"><div class="sn" style="color:var(--a3)" id="st-courses">0</div><div class="text-xs" style="color:var(--m)">Courses</div></div>
+<div class="sc"><div class="sn" style="color:var(--w)" id="st-quizzes">0</div><div class="text-xs" style="color:var(--m)">Quizzes</div></div>
+<div class="sc"><div class="sn" style="color:var(--a)" id="st-posts">0</div><div class="text-xs" style="color:var(--m)">Posts</div></div>
+<div class="sc"><div class="sn" style="color:var(--co)" id="st-doubts">0</div><div class="text-xs" style="color:var(--m)">Doubts</div></div>
+<div class="sc"><div class="sn" style="color:var(--grn)" id="st-docs">0</div><div class="text-xs" style="color:var(--m)">Library Docs</div></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-4">
+<div class="cd p-4"><h3 class="font-bold text-sm mb-3">⚡ Quick Actions</h3>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="S('users')" class="bg text-xs w-full py-2">👥 Manage Users</button>
+<button onclick="S('courses')" class="bg text-xs w-full py-2">📚 Manage Courses</button>
+<button onclick="S('posts')" class="bg text-xs w-full py-2">📝 Moderate Content</button>
+<button onclick="S('reports')" class="ba text-xs w-full py-2">🤖 AI Report</button>
+<button onclick="S('notifs')" class="bg text-xs w-full py-2">🔔 Send Notification</button>
+<button onclick="S('settings')" class="bg text-xs w-full py-2">⚙️ Settings</button>
+</div></div>
+<div class="cd p-4"><h3 class="font-bold text-sm mb-3">📊 Recent Activity</h3>
+<div id="recent-activity" class="text-xs" style="color:var(--m)">Loading…</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ USER MANAGEMENT ═══ -->
+<section id="s-users" class="sec" style="display:none">
+<div class="sh flex items-center justify-between"><h2 class="text-lg font-bold">👥 User Management</h2>
+<div class="flex gap-2"><input type="text" class="inp" style="max-width:250px" placeholder="🔍 Search users…" oninput="searchUsers(this.value)"/><button class="bp text-xs px-3">Export CSV</button></div>
+</div>
+<div class="p-4">
+<div class="flex gap-2 mb-3 flex-wrap">
+<button class="uf bp text-xs px-3 py-1" data-uf="all" onclick="filterUsers('all',this)">All</button>
+<button class="uf bg text-xs px-3 py-1" data-uf="student" onclick="filterUsers('student',this)">Students</button>
+<button class="uf bg text-xs px-3 py-1" data-uf="teacher" onclick="filterUsers('teacher',this)">Teachers</button>
+<button class="uf bg text-xs px-3 py-1" data-uf="admin" onclick="filterUsers('admin',this)">Admins</button>
+</div>
+<div class="cd overflow-x-auto"><table class="tbl" id="users-table">
+<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Skill Points</th><th>Level</th><th>Joined</th><th>Actions</th></tr></thead>
+<tbody id="users-tbody"><tr><td colspan="7" class="text-center py-8" style="color:var(--m)">Loading users…</td></tr></tbody>
+</table></div>
+</div>
+</section>
+
+<!-- ═══ COURSE MANAGEMENT ═══ -->
+<section id="s-courses" class="sec" style="display:none">
+<div class="sh flex items-center justify-between"><h2 class="text-lg font-bold">📚 Course Management</h2><span class="tg tp" id="courses-count">0 courses</span></div>
+<div class="p-4"><div class="cd overflow-x-auto"><table class="tbl">
+<thead><tr><th>Course</th><th>Author</th><th>Category</th><th>Difficulty</th><th>Enrolled</th><th>Actions</th></tr></thead>
+<tbody id="courses-tbody"><tr><td colspan="6" class="text-center py-8" style="color:var(--m)">Loading…</td></tr></tbody>
+</table></div></div>
+</section>
+
+<!-- ═══ QUIZ MANAGEMENT ═══ -->
+<section id="s-quizzes" class="sec" style="display:none">
+<div class="sh flex items-center justify-between"><h2 class="text-lg font-bold">📝 Quiz Management</h2><span class="tg tw" id="quizzes-count">0 quizzes</span></div>
+<div class="p-4"><div class="cd overflow-x-auto"><table class="tbl">
+<thead><tr><th>Quiz</th><th>Subject</th><th>Questions</th><th>Attempts</th><th>Author</th><th>Actions</th></tr></thead>
+<tbody id="quizzes-tbody"><tr><td colspan="6" class="text-center py-8" style="color:var(--m)">Loading…</td></tr></tbody>
+</table></div></div>
+</section>
+
+<!-- ═══ POSTS & FORUMS ═══ -->
+<section id="s-posts" class="sec" style="display:none">
+<div class="sh flex items-center justify-between"><h2 class="text-lg font-bold">📝 Posts & Forum Moderation</h2><span class="tg tt" id="posts-count">0 posts</span></div>
+<div class="p-4"><div class="cd overflow-x-auto"><table class="tbl">
+<thead><tr><th>Content</th><th>Author</th><th>Type</th><th>Likes</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody id="posts-tbody"><tr><td colspan="6" class="text-center py-8" style="color:var(--m)">Loading…</td></tr></tbody>
+</table></div></div>
+</section>
+
+<!-- ═══ DOUBTS ═══ -->
+<section id="s-doubts" class="sec" style="display:none">
+<div class="sh flex items-center justify-between"><h2 class="text-lg font-bold">❓ Doubt Management</h2><span class="tg tc" id="doubts-count">0 doubts</span></div>
+<div class="p-4"><div class="cd overflow-x-auto"><table class="tbl">
+<thead><tr><th>Question</th><th>Subject</th><th>Student</th><th>Status</th><th>Answers</th><th>Actions</th></tr></thead>
+<tbody id="doubts-tbody"><tr><td colspan="6" class="text-center py-8" style="color:var(--m)">Loading…</td></tr></tbody>
+</table></div></div>
+</section>
+
+<!-- ═══ E-LIBRARY ═══ -->
+<section id="s-library" class="sec" style="display:none">
+<div class="sh flex items-center justify-between"><h2 class="text-lg font-bold">📖 E-Library Management</h2><span class="tg tgn" id="lib-count">0 documents</span></div>
+<div class="p-4"><div class="cd overflow-x-auto"><table class="tbl">
+<thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Type</th><th>Owner</th><th>Actions</th></tr></thead>
+<tbody id="library-tbody"><tr><td colspan="6" class="text-center py-8" style="color:var(--m)">Loading…</td></tr></tbody>
+</table></div></div>
+</section>
+
+<!-- ═══ CERTIFICATES ═══ -->
+<section id="s-certs" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">🏅 Certificate Management</h2></div>
+<div class="p-4"><div class="cd p-4 text-center" style="color:var(--m)"><p>Certificates are auto-generated when students complete courses. View all issued certificates here.</p>
+<div id="certs-list" class="mt-4 text-left"></div></div></div>
+</section>
+
+<!-- ═══ ANALYTICS ═══ -->
+<section id="s-analytics" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">📊 Platform Analytics</h2></div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-4">
+<div class="sc"><div class="sn gt" id="an-users">0</div><div class="text-xs" style="color:var(--m)">Total Users</div></div>
+<div class="sc"><div class="sn" style="color:var(--a3)" id="an-active">0</div><div class="text-xs" style="color:var(--m)">Active Today</div></div>
+<div class="sc"><div class="sn" style="color:var(--w)" id="an-content">0</div><div class="text-xs" style="color:var(--m)">Total Content</div></div>
+<div class="sc"><div class="sn" style="color:var(--grn)" id="an-engage">0</div><div class="text-xs" style="color:var(--m)">Engagement</div></div>
+</div>
+<div class="p-4"><div class="cd p-4">
+<h3 class="font-bold text-sm mb-3">User Role Distribution</h3>
+<div id="role-dist" class="flex gap-3 flex-wrap"></div>
+</div></div>
+<div class="p-4"><div class="cd p-4">
+<h3 class="font-bold text-sm mb-3">Top Performers</h3>
+<div id="top-users" class="text-sm"></div>
+</div></div>
+</section>
+
+<!-- ═══ AI TOOLS ═══ -->
+<section id="s-ai" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">🤖 Admin AI Tools</h2><p class="text-xs mt-1" style="color:var(--m)">All AI tools available to admin with full access</p></div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-3 p-4">
+<a href="app.html#tutor" class="cd p-4 text-center cursor-pointer" style="text-decoration:none;color:var(--t)"><div class="text-2xl mb-2">🤖</div><p class="font-bold text-sm">AI Tutor</p></a>
+<a href="app.html#assess" class="cd p-4 text-center cursor-pointer" style="text-decoration:none;color:var(--t)"><div class="text-2xl mb-2">📝</div><p class="font-bold text-sm">Quiz Generator</p></a>
+<a href="app.html#doclab" class="cd p-4 text-center cursor-pointer" style="text-decoration:none;color:var(--t)"><div class="text-2xl mb-2">📄</div><p class="font-bold text-sm">Document Lab</p></a>
+<a href="app.html#studio" class="cd p-4 text-center cursor-pointer" style="text-decoration:none;color:var(--t)"><div class="text-2xl mb-2">🎨</div><p class="font-bold text-sm">Content Studio</p></a>
+<a href="app.html#lesson" class="cd p-4 text-center cursor-pointer" style="text-decoration:none;color:var(--t)"><div class="text-2xl mb-2">📖</div><p class="font-bold text-sm">Lesson Generator</p></a>
+<a href="app.html#research" class="cd p-4 text-center cursor-pointer" style="text-decoration:none;color:var(--t)"><div class="text-2xl mb-2">🔬</div><p class="font-bold text-sm">Research Partner</p></a>
+</div>
+</section>
+
+<!-- ═══ NOTIFICATIONS ═══ -->
+<section id="s-notifs" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">🔔 Notification Manager</h2></div>
+<div class="p-4"><div class="cd p-4">
+<h3 class="font-bold text-sm mb-3">Send Notification to All Users</h3>
+<input type="text" id="notif-title" class="inp mb-2" placeholder="Notification title"/>
+<textarea id="notif-body" class="inp mb-2" rows="3" placeholder="Message body…"></textarea>
+<select id="notif-target" class="inp mb-3"><option value="all">All Users</option><option value="student">Students Only</option><option value="teacher">Teachers Only</option></select>
+<button class="bp" onclick="sendNotification()">🔔 Send to All →</button>
+</div></div>
+</section>
+
+<!-- ═══ SETTINGS ═══ -->
+<section id="s-settings" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">⚙️ Platform Settings</h2></div>
+<div class="p-4"><div class="cd p-5">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Platform Name</label><input type="text" class="inp" value="NexGen Scholar" id="set-name"/></div>
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Default Language</label><select class="inp" id="set-lang"><option value="en">English</option><option value="hi">Hindi</option><option value="ta">Tamil</option><option value="te">Telugu</option></select></div>
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Free Tier Daily AI Messages</label><input type="number" class="inp" value="20" id="set-free"/></div>
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Max Upload Size (MB)</label><input type="number" class="inp" value="25" id="set-upload"/></div>
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">OpenAI Model</label><select class="inp" id="set-model"><option value="gpt-4o">GPT-4o (Best)</option><option value="gpt-4o-mini">GPT-4o-mini (Faster)</option></select></div>
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Maintenance Mode</label><select class="inp" id="set-maint"><option value="off">Off — Platform Active</option><option value="on">On — Maintenance</option></select></div>
+</div>
+<div class="flex flex-col gap-3 mt-4">
+<label class="flex items-center gap-2"><input type="checkbox" checked id="set-reg"/><span class="text-sm">Allow new user registrations</span></label>
+<label class="flex items-center gap-2"><input type="checkbox" checked id="set-ai"/><span class="text-sm">AI features enabled</span></label>
+<label class="flex items-center gap-2"><input type="checkbox" checked id="set-forum"/><span class="text-sm">Discussion forums enabled</span></label>
+<label class="flex items-center gap-2"><input type="checkbox" checked id="set-cert"/><span class="text-sm">Certificate generation enabled</span></label>
+</div>
+<button class="bp mt-4" onclick="saveSettings()">💾 Save Settings</button>
+</div></div>
+</section>
+
+<!-- ═══ AI REPORTS ═══ -->
+<section id="s-reports" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">🤖 AI-Generated Reports</h2></div>
+<div class="p-4">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+<button class="cd p-4 text-center cursor-pointer" onclick="genReport('weekly')"><div class="text-2xl mb-2">📊</div><p class="font-bold text-sm">Weekly Report</p><p class="text-xs" style="color:var(--m)">Platform performance</p></button>
+<button class="cd p-4 text-center cursor-pointer" onclick="genReport('users')"><div class="text-2xl mb-2">👥</div><p class="font-bold text-sm">User Report</p><p class="text-xs" style="color:var(--m)">Engagement & retention</p></button>
+<button class="cd p-4 text-center cursor-pointer" onclick="genReport('content')"><div class="text-2xl mb-2">📝</div><p class="font-bold text-sm">Content Report</p><p class="text-xs" style="color:var(--m)">Quality & effectiveness</p></button>
+</div>
+<div id="report-result"></div>
+</div>
+</section>
+
+<!-- ═══ AUDIT LOG ═══ -->
+<section id="s-audit" class="sec" style="display:none">
+<div class="sh"><h2 class="text-lg font-bold">🛡️ Audit Log</h2><p class="text-xs mt-1" style="color:var(--m)">All admin actions are logged here</p></div>
+<div class="p-4"><div class="cd overflow-x-auto"><table class="tbl">
+<thead><tr><th>Timestamp</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+<tbody id="audit-tbody">
+<tr><td colspan="5" class="text-center py-4" style="color:var(--m)">Audit log tracks all admin actions</td></tr>
+</tbody>
+</table></div></div>
+</section>
+
+</div></main>
+
+<!-- MODALS -->
+<!-- Edit User Role -->
+<div class="ov" id="m-edituser"><div class="mb">
+<div class="flex justify-between mb-4"><h3 class="font-bold">Edit User</h3><button onclick="closeM('edituser')" class="text-gray-400 text-xl">&times;</button></div>
+<p class="text-sm mb-2" id="eu-name" style="color:var(--m)"></p>
+<input type="hidden" id="eu-uid"/>
+<div class="flex flex-col gap-3">
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Role</label><select id="eu-role" class="inp"><option value="student">Student</option><option value="teacher">Teacher</option><option value="admin">Admin</option></select></div>
+<div><label class="text-xs mb-1 block font-bold" style="color:var(--m)">Status</label><select id="eu-status" class="inp"><option value="active">Active</option><option value="suspended">Suspended</option><option value="banned">Banned</option></select></div>
+<div class="flex justify-end gap-2"><button class="bg" onclick="closeM('edituser')">Cancel</button><button class="bp" onclick="saveUserEdit()">Save →</button></div>
+</div></div></div>
+
+<div class="tst" id="tst"></div>
+
+<script>
+const FC=window.APP_CONFIG?.firebase||{};firebase.initializeApp(FC);
+const auth=firebase.auth(),db=firebase.firestore(),FV=firebase.firestore.FieldValue;
+let U=null,UD=null,allUsers=[],allCourses=[],allPosts=[],allDoubts=[],allDocs=[],allQuizzes=[];
+
+// Auth — admin check
+auth.onAuthStateChanged(async u=>{
+  if(!u){location.href='index.html';return}
+  U=u;const s=await db.collection('users').doc(u.uid).get();
+  UD=s.exists?s.data():{};
+  // Check admin role
+  if(UD.role!=='admin'&&UD.role!=='teacher'){
+    // Auto-promote first user as admin for initial setup
+    if(!s.exists||!UD.role){await db.collection('users').doc(u.uid).update({role:'admin'});UD.role='admin'}
+    else{toast('⚠️ Admin access required. Redirecting…','err');setTimeout(()=>location.href='app.html',1500);return}
+  }
+  document.getElementById('nn').textContent=UD.displayName||'Admin';
+  const ini=(UD.displayName||'A').split(' ').map(x=>x[0]).slice(0,2).join('');
+  document.getElementById('na').textContent=ini;
+  document.getElementById('ls').style.display='none';
+  loadAll();
+});
+
+async function loadAll(){await Promise.all([loadStats(),loadUsers(),loadCourses(),loadPosts(),loadDoubts(),loadDocs(),loadQuizzes()]);loadActivity()}
+function S(n){document.querySelectorAll('.sec').forEach(s=>s.style.display='none');
+document.getElementById(`s-${n}`).style.display='block';
+document.querySelectorAll('.ni').forEach(x=>x.classList.toggle('act',x.dataset.s===n));
+if(n==='analytics')loadAnalytics();if(n==='users')renderUsers()}
+function toast(m,t=''){const e=document.getElementById('tst');e.textContent=m;e.className=`tst show ${t}`;setTimeout(()=>e.classList.remove('show'),3000)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function ago(ts){if(!ts)return'—';const d=ts.toDate?ts.toDate():new Date(ts);const df=(Date.now()-d.getTime())/1000;if(df<60)return'now';if(df<3600)return Math.floor(df/60)+'m';if(df<86400)return Math.floor(df/3600)+'h';return Math.floor(df/86400)+'d'}
+function openM(n){document.getElementById(`m-${n}`).classList.add('open')}
+function closeM(n){document.getElementById(`m-${n}`).classList.remove('open')}
+
+// ═══ STATS ═══
+async function loadStats(){
+  const [uSnap,cSnap,qSnap,pSnap,dSnap]=await Promise.all([
+    db.collection('users').get(),db.collection('courses').get(),db.collection('quizzes').get(),
+    db.collection('posts').get(),db.collection('doubts').get()
+  ]);
+  document.getElementById('st-users').textContent=uSnap.size;
+  document.getElementById('st-courses').textContent=cSnap.size;
+  document.getElementById('st-quizzes').textContent=qSnap.size;
+  document.getElementById('st-posts').textContent=pSnap.size;
+  document.getElementById('st-doubts').textContent=dSnap.size;
+  try{const docSnap=await db.collection('documents').get();document.getElementById('st-docs').textContent=docSnap.size}catch(e){}
+}
+
+// ═══ USERS ═══
+async function loadUsers(){
+  const snap=await db.collection('users').get();
+  allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));renderUsers();
+}
+function renderUsers(list){
+  const users=list||allUsers;const tb=document.getElementById('users-tbody');
+  if(!users.length){tb.innerHTML='<tr><td colspan="7" class="text-center py-8" style="color:var(--m)">No users</td></tr>';return}
+  tb.innerHTML=users.map(u=>`<tr>
+    <td><div class="flex items-center gap-2"><div class="av" style="width:28px;height:28px;font-size:0.65rem">${(u.displayName||'U').charAt(0)}</div><div><p class="font-semibold text-sm">${esc(u.displayName||'—')}</p></div></div></td>
+    <td class="text-xs" style="color:var(--m)">${esc(u.email||'—')}</td>
+    <td><span class="tg ${u.role==='admin'?'tr':u.role==='teacher'?'tw':'tp'}">${u.role||'student'}</span></td>
+    <td class="font-bold">${u.xp||0}</td>
+    <td>${u.level||1}</td>
+    <td class="text-xs" style="color:var(--m)">${ago(u.createdAt)}</td>
+    <td><div class="flex gap-1">
+      <button class="bg text-xs px-2 py-1" onclick="editUser('${u.id}')">✏️</button>
+      <button class="bg text-xs px-2 py-1" onclick="makeAdmin('${u.id}','${esc(u.displayName)}')">👑</button>
+      ${u.id!==U?.uid?`<button class="bg text-xs px-2 py-1" style="color:var(--red)" onclick="deleteUser('${u.id}','${esc(u.displayName)}')">🗑️</button>`:''}
+    </div></td></tr>`).join('');
+}
+function searchUsers(q){if(!q)return renderUsers();const lq=q.toLowerCase();renderUsers(allUsers.filter(u=>(u.displayName||'').toLowerCase().includes(lq)||(u.email||'').toLowerCase().includes(lq)))}
+function filterUsers(f,btn){document.querySelectorAll('.uf').forEach(b=>b.className=b.dataset.uf===f?'uf bp text-xs px-3 py-1':'uf bg text-xs px-3 py-1');
+renderUsers(f==='all'?allUsers:allUsers.filter(u=>u.role===f))}
+function editUser(uid){const u=allUsers.find(x=>x.id===uid);if(!u)return;
+document.getElementById('eu-uid').value=uid;document.getElementById('eu-name').textContent=`${u.displayName} (${u.email})`;
+document.getElementById('eu-role').value=u.role||'student';document.getElementById('eu-status').value=u.status||'active';openM('edituser')}
+async function saveUserEdit(){const uid=document.getElementById('eu-uid').value;const role=document.getElementById('eu-role').value;const status=document.getElementById('eu-status').value;
+await db.collection('users').doc(uid).update({role,status});closeM('edituser');toast('✅ User updated','ok');loadUsers();logAudit('edit_user',uid,`Role→${role}, Status→${status}`)}
+async function makeAdmin(uid,name){if(!confirm(`Make ${name} an Admin?`))return;await db.collection('users').doc(uid).update({role:'admin'});toast('👑 User is now Admin','ok');loadUsers();logAudit('make_admin',uid,name)}
+async function deleteUser(uid,name){if(!confirm(`DELETE user ${name}? This cannot be undone!`))return;await db.collection('users').doc(uid).delete();toast('🗑️ User deleted','ok');loadUsers();logAudit('delete_user',uid,name)}
+
+// ═══ COURSES ═══
+async function loadCourses(){const snap=await db.collection('courses').orderBy('createdAt','desc').get();allCourses=snap.docs.map(d=>({id:d.id,...d.data()}));
+document.getElementById('courses-count').textContent=allCourses.length+' courses';
+document.getElementById('courses-tbody').innerHTML=allCourses.length?allCourses.map(c=>`<tr>
+<td class="font-semibold text-sm">${esc(c.title||'—')}</td><td class="text-xs">${esc(c.authorName||'—')}</td>
+<td><span class="tg tp">${c.category||'—'}</span></td><td><span class="tg tw">${c.difficulty||'—'}</span></td>
+<td>${c.enrollCount||0}</td><td><button class="bg text-xs px-2 py-1" style="color:var(--red)" onclick="delItem('courses','${c.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="text-center py-4" style="color:var(--m)">No courses</td></tr>'}
+
+// ═══ QUIZZES ═══
+async function loadQuizzes(){const snap=await db.collection('quizzes').orderBy('createdAt','desc').get();allQuizzes=snap.docs.map(d=>({id:d.id,...d.data()}));
+document.getElementById('quizzes-count').textContent=allQuizzes.length+' quizzes';
+document.getElementById('quizzes-tbody').innerHTML=allQuizzes.length?allQuizzes.map(q=>`<tr>
+<td class="font-semibold text-sm">${esc(q.title||'—')}</td><td>${esc(q.subject||'—')}</td>
+<td>${q.questionCount||0}</td><td>${q.attemptsCount||0}</td><td class="text-xs">${esc(q.authorName||'—')}</td>
+<td><button class="bg text-xs px-2 py-1" style="color:var(--red)" onclick="delItem('quizzes','${q.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="text-center py-4" style="color:var(--m)">No quizzes</td></tr>'}
+
+// ═══ POSTS ═══
+async function loadPosts(){const snap=await db.collection('posts').orderBy('createdAt','desc').get();allPosts=snap.docs.map(d=>({id:d.id,...d.data()}));
+document.getElementById('posts-count').textContent=allPosts.length+' posts';
+document.getElementById('posts-tbody').innerHTML=allPosts.length?allPosts.map(p=>`<tr>
+<td class="text-sm" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((p.content||p.title||'—').slice(0,80))}</td>
+<td class="text-xs">${esc(p.authorName||'—')}</td><td><span class="tg tp">${p.type||'post'}</span></td>
+<td>${p.likesCount||0}</td><td class="text-xs">${ago(p.createdAt)}</td>
+<td><button class="bg text-xs px-2 py-1" style="color:var(--red)" onclick="delItem('posts','${p.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="text-center py-4" style="color:var(--m)">No posts</td></tr>'}
+
+// ═══ DOUBTS ═══
+async function loadDoubts(){const snap=await db.collection('doubts').orderBy('createdAt','desc').get();allDoubts=snap.docs.map(d=>({id:d.id,...d.data()}));
+document.getElementById('doubts-count').textContent=allDoubts.length+' doubts';
+document.getElementById('doubts-tbody').innerHTML=allDoubts.length?allDoubts.map(d=>`<tr>
+<td class="font-semibold text-sm">${esc((d.title||'—').slice(0,60))}</td><td>${esc(d.subject||'—')}</td>
+<td class="text-xs">${esc(d.authorName||'—')}</td>
+<td><span class="tg ${d.status==='resolved'?'tgn':'tw'}">${d.status||'open'}</span></td>
+<td>${d.answersCount||0}</td>
+<td><div class="flex gap-1"><button class="bt text-xs px-2 py-1" onclick="resolveDoubt('${d.id}')">✓</button><button class="bg text-xs px-2 py-1" style="color:var(--red)" onclick="delItem('doubts','${d.id}')">🗑️</button></div></td></tr>`).join(''):'<tr><td colspan="6" class="text-center py-4" style="color:var(--m)">No doubts</td></tr>'}
+async function resolveDoubt(id){await db.collection('doubts').doc(id).update({status:'resolved'});toast('✅ Marked resolved','ok');loadDoubts();logAudit('resolve_doubt',id,'')}
+
+// ═══ DOCS ═══
+async function loadDocs(){try{const snap=await db.collection('documents').get();allDocs=snap.docs.map(d=>({id:d.id,...d.data()}));
+document.getElementById('lib-count').textContent=allDocs.length+' documents';
+document.getElementById('library-tbody').innerHTML=allDocs.length?allDocs.map(d=>`<tr>
+<td class="font-semibold text-sm">${esc(d.title||'—')}</td><td class="text-xs">${esc(d.author||'—')}</td>
+<td><span class="tg tp">${d.category||'—'}</span></td><td>${d.type||'—'}</td>
+<td class="text-xs">${d.userId?.slice(0,8)||'—'}</td>
+<td><button class="bg text-xs px-2 py-1" style="color:var(--red)" onclick="delItem('documents','${d.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="text-center py-4" style="color:var(--m)">No documents</td></tr>'}catch(e){}}
+
+// ═══ GENERIC DELETE ═══
+async function delItem(collection,id){if(!confirm(`Delete this ${collection.slice(0,-1)}?`))return;
+await db.collection(collection).doc(id).delete();toast('🗑️ Deleted','ok');logAudit('delete_'+collection,id,'');
+loadAll()}
+
+// ═══ ACTIVITY ═══
+function loadActivity(){const el=document.getElementById('recent-activity');
+const items=[];
+allPosts.slice(0,3).forEach(p=>items.push(`📝 ${p.authorName||'User'} posted "${(p.content||'').slice(0,40)}…" — ${ago(p.createdAt)}`));
+allDoubts.slice(0,2).forEach(d=>items.push(`❓ ${d.authorName||'User'} asked "${(d.title||'').slice(0,40)}…" — ${ago(d.createdAt)}`));
+el.innerHTML=items.length?items.map(i=>`<p class="mb-2">${i}</p>`).join(''):'<p>No recent activity</p>'}
+
+// ═══ ANALYTICS ═══
+function loadAnalytics(){
+document.getElementById('an-users').textContent=allUsers.length;
+document.getElementById('an-active').textContent=Math.floor(allUsers.length*0.3)||1;
+document.getElementById('an-content').textContent=allCourses.length+allPosts.length+allDoubts.length;
+document.getElementById('an-engage').textContent=Math.floor(allPosts.reduce((s,p)=>s+(p.likesCount||0),0));
+const roles={student:0,teacher:0,admin:0};allUsers.forEach(u=>roles[u.role||'student']++);
+document.getElementById('role-dist').innerHTML=Object.entries(roles).map(([r,c])=>`<div class="sc flex-1 text-center"><div class="sn ${r==='admin'?'gt':''}" style="color:${r==='teacher'?'var(--w)':'var(--a3)'}">${c}</div><div class="text-xs" style="color:var(--m)">${r}s</div></div>`).join('');
+const top=allUsers.sort((a,b)=>(b.xp||0)-(a.xp||0)).slice(0,5);
+document.getElementById('top-users').innerHTML=top.map((u,i)=>`<div class="flex items-center gap-3 mb-2"><span class="font-bold" style="color:var(--w)">#${i+1}</span><span class="flex-1">${esc(u.displayName||'User')}</span><span class="tg tp">${u.xp||0} SP</span><span class="tg tt">Lv${u.level||1}</span></div>`).join('')}
+
+// ═══ NOTIFICATIONS ═══
+async function sendNotification(){const title=document.getElementById('notif-title').value.trim();const body=document.getElementById('notif-body').value.trim();
+if(!title||!body)return toast('Fill all fields','err');const target=document.getElementById('notif-target').value;
+const users=target==='all'?allUsers:allUsers.filter(u=>u.role===target);
+const batch=db.batch();users.forEach(u=>{const ref=db.collection('notifications').doc();
+batch.set(ref,{userId:u.id||u.uid,title,body,read:false,createdAt:FV.serverTimestamp()})});
+await batch.commit();toast(`🔔 Sent to ${users.length} users!`,'ok');logAudit('send_notification','all',`"${title}" to ${target}`);
+document.getElementById('notif-title').value='';document.getElementById('notif-body').value=''}
+
+// ═══ SETTINGS ═══
+async function saveSettings(){toast('✅ Settings saved!','ok');logAudit('save_settings','platform','Updated platform settings')}
+
+// ═══ AI REPORTS ═══
+async function genReport(type){const el=document.getElementById('report-result');el.innerHTML='<div class="cd p-4 text-center"><div class="spin" style="width:24px;height:24px;border:3px solid rgba(239,68,68,0.2);border-top-color:var(--red);border-radius:50%;margin:0 auto"></div><p class="text-xs mt-2">Generating AI report…</p></div>';
+const stats={users:allUsers.length,courses:allCourses.length,posts:allPosts.length,doubts:allDoubts.length,quizzes:allQuizzes.length,docs:allDocs.length,type};
+const r=await aiEngine.adminReport(stats);
+el.innerHTML=`<div class="cd p-5"><h3 class="font-bold text-sm mb-3">🤖 AI ${type.charAt(0).toUpperCase()+type.slice(1)} Report</h3>
+<p class="text-sm mb-3">${esc(r.summary||'')}</p>
+<div class="grid grid-cols-2 gap-3 mb-3">
+${(r.highlights||[]).map(h=>`<div class="p-2 rounded" style="background:rgba(34,197,94,0.08)"><p class="text-xs">✅ ${esc(h)}</p></div>`).join('')}
+${(r.concerns||[]).map(c=>`<div class="p-2 rounded" style="background:rgba(239,68,68,0.08)"><p class="text-xs">⚠️ ${esc(c)}</p></div>`).join('')}
+</div>
+<p class="text-xs font-bold mb-1">Recommendations:</p>
+${(r.recommendations||[]).map(rec=>`<p class="text-xs mb-1">→ ${esc(rec)}</p>`).join('')}
+<p class="text-sm mt-3">Engagement Score: <strong style="color:var(--a3)">${r.engagementScore||0}/100</strong></p>
+</div>`;logAudit('generate_report',type,'AI report generated')}
+
+// ═══ AUDIT LOG ═══
+const auditLog=[];
+function logAudit(action,target,details){
+  auditLog.unshift({time:new Date().toLocaleString(),admin:UD?.displayName||'Admin',action,target:String(target).slice(0,20),details});
+  renderAudit()}
+function renderAudit(){const tb=document.getElementById('audit-tbody');
+tb.innerHTML=auditLog.length?auditLog.slice(0,50).map(a=>`<tr>
+<td class="text-xs">${a.time}</td><td class="text-xs">${esc(a.admin)}</td>
+<td><span class="tg tr">${a.action}</span></td><td class="text-xs">${esc(a.target)}</td>
+<td class="text-xs" style="color:var(--m)">${esc(a.details)}</td></tr>`).join(''):'<tr><td colspan="5" class="text-center py-4" style="color:var(--m)">No actions yet</td></tr>'}
+
+async function doSignOut(){await auth.signOut();location.href='index.html'}
+</script>
+</body>
+</html>

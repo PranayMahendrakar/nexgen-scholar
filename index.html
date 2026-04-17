@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NexGen Scholar — AI-Powered Personalized Learning</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--a:#6C5CE7;--a2:#A29BFE;--a3:#00CEC9;--w:#FDCB6E;--dk:#0B0D17;--s:#12152A;--bd:#252A45;--m:#6B7094;--t:#E8E9F3}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:var(--dk);color:var(--t);overflow-x:hidden}
+.nb{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(11,13,23,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd)}
+.hbg{background:radial-gradient(ellipse 70% 50% at 30% 0%,rgba(108,92,231,0.2),transparent 70%),radial-gradient(ellipse 50% 50% at 80% 20%,rgba(0,206,201,0.12),transparent 60%),var(--dk)}
+.gd{background-image:radial-gradient(rgba(108,92,231,0.15) 1px,transparent 1px);background-size:32px 32px}
+.gt{background:linear-gradient(135deg,#6C5CE7,#A29BFE 40%,#00CEC9 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ft{background:var(--s);border:1px solid var(--bd);border-radius:20px;padding:1.75rem;transition:all 0.3s;position:relative;overflow:hidden}
+.ft::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--a),var(--a3));opacity:0;transition:opacity 0.3s}
+.ft:hover{border-color:rgba(108,92,231,0.4);transform:translateY(-4px);box-shadow:0 20px 60px rgba(108,92,231,0.12)}.ft:hover::before{opacity:1}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}.ov.open{display:flex}
+.ml{background:var(--s);border:1px solid var(--bd);border-radius:24px;padding:2.5rem;width:100%;max-width:460px;animation:su 0.35s ease}
+@keyframes su{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.tb{flex:1;padding:0.6rem;border-radius:10px;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.2s;border:none}.tb.act{background:var(--a);color:#fff}.tb:not(.act){background:transparent;color:var(--m)}
+.ai{width:100%;padding:0.7rem 1rem;background:rgba(255,255,255,0.04);border:1px solid var(--bd);border-radius:12px;font-family:'Outfit';font-size:0.85rem;color:var(--t);outline:none;transition:all 0.2s}.ai::placeholder{color:var(--m)}.ai:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(108,92,231,0.15)}
+.bp{background:var(--a);color:#fff;border:none;border-radius:12px;font-family:'Outfit';font-weight:700;cursor:pointer;transition:all 0.2s;padding:0.8rem 1.5rem;font-size:0.9rem}.bp:hover{background:#5A4BD1;transform:translateY(-2px);box-shadow:0 8px 28px rgba(108,92,231,0.35)}
+.bo{background:transparent;color:var(--t);border:1.5px solid var(--bd);border-radius:12px;font-family:'Outfit';font-weight:600;cursor:pointer;transition:all 0.2s;padding:0.8rem 1.5rem;font-size:0.9rem}.bo:hover{border-color:var(--a);color:var(--a)}
+.sc{display:flex;align-items:center;gap:12px;width:100%;padding:0.7rem 1.1rem;background:rgba(255,255,255,0.04);border:1px solid var(--bd);border-radius:12px;color:var(--t);font-family:'Outfit';font-size:0.85rem;cursor:pointer;transition:all 0.2s}.sc:hover{background:rgba(255,255,255,0.08);border-color:rgba(108,92,231,0.4)}
+.dv{display:flex;align-items:center;gap:1rem}.dl{flex:1;height:1px;background:var(--bd)}.dt{font-size:0.65rem;color:var(--m);text-transform:uppercase;letter-spacing:0.1em}
+.tst{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1E35;border:1px solid var(--bd);color:var(--t);padding:10px 24px;border-radius:999px;font-size:0.8rem;opacity:0;pointer-events:none;transition:all 0.3s;z-index:999}.tst.show{opacity:1;transform:translateX(-50%) translateY(0)}.tst.err{background:#4A1942}.tst.ok{background:#0A3D2E}
+.as{height:3px;background:linear-gradient(90deg,#6C5CE7 25%,#00CEC9 50%,#FDCB6E 75%,#E17055)}
+@keyframes fi{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}.fi{animation:fi 0.7s ease both}
+</style>
+</head>
+<body>
+<div class="as"></div>
+<nav class="nb"><div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+<div class="flex items-center gap-2"><div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#6C5CE7,#00CEC9)"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span style="font-weight:800;font-size:1.1rem">NexGen<span class="gt">Scholar</span></span></div>
+<div class="hidden md:flex items-center gap-8 text-sm" style="color:var(--m)"><a href="#features" class="hover:text-white">Features</a><a href="#how" class="hover:text-white">How It Works</a></div>
+<div class="flex items-center gap-2"><button onclick="openA('si')" class="bo px-4 py-2 text-sm">Sign In</button><button onclick="openA('su')" class="bp px-4 py-2 text-sm">Get Started</button></div>
+</div></nav>
+
+<section class="hbg gd pt-36 pb-28 px-4"><div class="max-w-5xl mx-auto text-center">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 fi" style="background:rgba(108,92,231,0.1);border:1px solid rgba(108,92,231,0.3)"><span class="w-2 h-2 rounded-full animate-pulse" style="background:var(--a3)"></span><span class="text-xs font-semibold" style="color:var(--a2);letter-spacing:0.08em">AI-POWERED · PERSONALIZED · ADAPTIVE</span></div>
+<h1 class="text-5xl sm:text-6xl md:text-7xl font-black leading-[1.05] mb-7 fi" style="animation-delay:0.1s;letter-spacing:-0.035em">Your AI Tutor That<br/><span class="gt">Learns You</span><br/>Before Teaching You</h1>
+<p class="text-lg max-w-2xl mx-auto mb-12 fi" style="color:var(--m);animation-delay:0.2s;font-weight:300;line-height:1.75">Cognitive profiling, 3 tutor modes, adaptive quizzes, document lab, research partner, dream path builder, exam simulator, stress counselor — all powered by GPT-4o.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center fi" style="animation-delay:0.3s"><button onclick="openA('su')" class="bp px-10 py-4 text-base">🚀 Start Free →</button><button class="bo px-10 py-4 text-base" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See Features</button></div>
+</div></section>
+
+<section id="features" class="py-24 px-4 max-w-7xl mx-auto"><div class="text-center mb-14"><h2 class="text-4xl font-bold mb-4"><span class="gt">Every Feature</span> From the Blueprint</h2></div>
+<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="ft"><div class="text-2xl mb-3">🧬</div><h3 class="font-bold mb-1">Cognitive Profiling</h3><p class="text-xs" style="color:var(--m)">AI diagnostic: learning style, pace, Bloom's level</p></div>
+<div class="ft"><div class="text-2xl mb-3">🤖</div><h3 class="font-bold mb-1">AI Tutor 3 Modes</h3><p class="text-xs" style="color:var(--m)">Socratic · Direct · Deep Dive + Voice + Photo</p></div>
+<div class="ft"><div class="text-2xl mb-3">📄</div><h3 class="font-bold mb-1">Document Lab</h3><p class="text-xs" style="color:var(--m)">Upload → flashcards, quizzes, summaries, maps</p></div>
+<div class="ft"><div class="text-2xl mb-3">📊</div><h3 class="font-bold mb-1">Adaptive Assessments</h3><p class="text-xs" style="color:var(--m)">Quiz gen, essay grading, exam simulator</p></div>
+<div class="ft"><div class="text-2xl mb-3">🎯</div><h3 class="font-bold mb-1">Practice Arena</h3><p class="text-xs" style="color:var(--m)">Infinite problems, step-by-step, error DNA</p></div>
+<div class="ft"><div class="text-2xl mb-3">📅</div><h3 class="font-bold mb-1">Study Planner</h3><p class="text-xs" style="color:var(--m)">AI schedule + spaced repetition</p></div>
+<div class="ft"><div class="text-2xl mb-3">🔬</div><h3 class="font-bold mb-1">Research Partner</h3><p class="text-xs" style="color:var(--m)">Paper summary, lit review, citations</p></div>
+<div class="ft"><div class="text-2xl mb-3">✍️</div><h3 class="font-bold mb-1">Writing Lab</h3><p class="text-xs" style="color:var(--m)">Academic writing, thesis, paraphrase</p></div>
+<div class="ft"><div class="text-2xl mb-3">🎤</div><h3 class="font-bold mb-1">Presentation Coach</h3><p class="text-xs" style="color:var(--m)">Slide gen + delivery feedback</p></div>
+<div class="ft"><div class="text-2xl mb-3">🎙️</div><h3 class="font-bold mb-1">Interview Prep</h3><p class="text-xs" style="color:var(--m)">Mock interviews with AI feedback</p></div>
+<div class="ft"><div class="text-2xl mb-3">🎯</div><h3 class="font-bold mb-1">Dream Path Builder</h3><p class="text-xs" style="color:var(--m)">Career goal → complete roadmap</p></div>
+<div class="ft"><div class="text-2xl mb-3">⏰</div><h3 class="font-bold mb-1">Concept Time Machine</h3><p class="text-xs" style="color:var(--m)">How concepts evolved through history</p></div>
+<div class="ft"><div class="text-2xl mb-3">🧪</div><h3 class="font-bold mb-1">AI Lab Partner</h3><p class="text-xs" style="color:var(--m)">Virtual experiment simulations</p></div>
+<div class="ft"><div class="text-2xl mb-3">📖</div><h3 class="font-bold mb-1">Lesson Generator</h3><p class="text-xs" style="color:var(--m)">Curriculum-aligned + differentiated</p></div>
+<div class="ft"><div class="text-2xl mb-3">💚</div><h3 class="font-bold mb-1">Stress Counselor</h3><p class="text-xs" style="color:var(--m)">Personalized exam stress management</p></div>
+<div class="ft"><div class="text-2xl mb-3">👨‍👩‍👧</div><h3 class="font-bold mb-1">Parent Portal</h3><p class="text-xs" style="color:var(--m)">Simple weekly progress reports</p></div>
+</div></section>
+
+<section id="how" class="py-24 px-4" style="background:var(--s)"><div class="max-w-4xl mx-auto text-center"><h2 class="text-4xl font-bold mb-14">How It Works</h2>
+<div class="grid md:grid-cols-4 gap-6">
+<div><div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4" style="background:rgba(108,92,231,0.15)">🔑</div><h3 class="font-bold mb-1">1. Sign Up</h3><p class="text-xs" style="color:var(--m)">Free account in seconds</p></div>
+<div><div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4" style="background:rgba(0,206,201,0.15)">🧬</div><h3 class="font-bold mb-1">2. AI Profiles You</h3><p class="text-xs" style="color:var(--m)">Cognitive diagnostic</p></div>
+<div><div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4" style="background:rgba(253,203,110,0.15)">📖</div><h3 class="font-bold mb-1">3. Learn Adaptively</h3><p class="text-xs" style="color:var(--m)">Everything adapts to you</p></div>
+<div><div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4" style="background:rgba(225,112,85,0.15)">🏆</div><h3 class="font-bold mb-1">4. Achieve Goals</h3><p class="text-xs" style="color:var(--m)">Track & predict scores</p></div>
+</div></div></section>
+
+<section class="py-24 px-4"><div class="max-w-3xl mx-auto text-center"><h2 class="text-4xl font-bold mb-6">Ready to Learn <span class="gt">Smarter</span>?</h2><button onclick="openA('su')" class="bp px-12 py-4 text-lg">🎓 Join Free</button></div></section>
+
+<footer class="py-8 px-4 border-t" style="border-color:var(--bd)"><div class="max-w-7xl mx-auto flex items-center justify-between"><span style="font-weight:700;font-size:0.85rem">NexGen<span class="gt">Scholar</span></span><p class="text-xs" style="color:var(--m)">© 2025 · AI-Powered Learning</p></div></footer>
+
+<!-- AUTH MODAL -->
+<div class="ov" id="am"><div class="ml">
+<div class="flex justify-between mb-5"><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#6C5CE7,#00CEC9)"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span style="font-weight:800">NexGen<span class="gt">Scholar</span></span></div><button onclick="closeA()" class="text-gray-400 text-2xl">&times;</button></div>
+<div class="flex gap-1 p-1 rounded-xl mb-5" style="background:rgba(255,255,255,0.05)"><button class="tb act" id="t-si" onclick="sT('si')">Sign In</button><button class="tb" id="t-su" onclick="sT('su')">Create Account</button></div>
+<div id="p-si">
+<div class="flex flex-col gap-2.5 mb-4"><button class="sc" onclick="gAuth()"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google</button>
+<button class="sc" onclick="ghAuth()"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</button></div>
+<div class="dv mb-4"><div class="dl"></div><span class="dt">or email</span><div class="dl"></div></div>
+<div class="flex flex-col gap-2.5 mb-4"><input type="email" id="si-e" class="ai" placeholder="Email"/><input type="password" id="si-p" class="ai" placeholder="Password"/></div>
+<button class="bp w-full" onclick="siEmail()">Sign In</button>
+<p class="text-xs text-center mt-3" style="color:var(--m)">No account? <a href="#" onclick="sT('su');return false" style="color:var(--a2)">Create →</a></p>
+</div>
+<div id="p-su" style="display:none">
+<div class="flex flex-col gap-2.5 mb-4"><button class="sc" onclick="gAuth()"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google</button>
+<button class="sc" onclick="ghAuth()"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</button></div>
+<div class="dv mb-4"><div class="dl"></div><span class="dt">or email</span><div class="dl"></div></div>
+<div class="flex flex-col gap-2.5 mb-4"><div class="grid grid-cols-2 gap-2"><input type="text" id="su-fn" class="ai" placeholder="First name"/><input type="text" id="su-ln" class="ai" placeholder="Last name"/></div>
+<input type="email" id="su-e" class="ai" placeholder="Email"/><input type="password" id="su-p" class="ai" placeholder="Password (8+)"/>
+<select id="su-r" class="ai"><option value="student">Student</option><option value="teacher">Teacher</option><option value="professional">Professional</option><option value="researcher">Researcher</option></select></div>
+<button class="bp w-full" onclick="suEmail()">Create Account →</button>
+<p class="text-xs text-center mt-3" style="color:var(--m)">Have an account? <a href="#" onclick="sT('si');return false" style="color:var(--a2)">Sign in →</a></p>
+</div></div></div>
+
+<div class="tst" id="tst"></div>
+<div id="sb" style="display:none;position:fixed;top:3px;left:0;right:0;z-index:200;background:#4A1942;color:#F5D0FE;padding:8px 16px;text-align:center;font-size:0.75rem">⚠️ Edit <strong>config.js</strong> with your Firebase & OpenAI keys</div>
+
+<script>
+const fc=window.APP_CONFIG?.firebase||{};firebase.initializeApp(fc);
+const auth=firebase.auth(),db=firebase.firestore();
+if(!fc.apiKey||fc.apiKey==='YOUR_FIREBASE_API_KEY')document.getElementById('sb').style.display='block';
+auth.onAuthStateChanged(async u=>{if(u){
+  // Check role to decide where to redirect
+  try{const s=await db.collection('users').doc(u.uid).get();
+  if(s.exists&&(s.data().role==='admin'||s.data().role==='teacher')){location.href='admin.html'}
+  else{location.href='app.html'}}catch(e){location.href='app.html'}
+}});
+function openA(t){document.getElementById('am').classList.add('open');sT(t)}
+function closeA(){document.getElementById('am').classList.remove('open')}
+document.getElementById('am').addEventListener('click',e=>{if(e.target.id==='am')closeA()});
+function sT(t){document.getElementById('t-si').classList.toggle('act',t==='si');document.getElementById('t-su').classList.toggle('act',t==='su');document.getElementById('p-si').style.display=t==='si'?'block':'none';document.getElementById('p-su').style.display=t==='su'?'block':'none'}
+function toast(m,t=''){const e=document.getElementById('tst');e.textContent=m;e.className=`tst show ${t}`;setTimeout(()=>e.classList.remove('show'),3500)}
+async function ok(u,r){const ref=db.collection('users').doc(u.uid),s=await ref.get();if(!s.exists){await ref.set({uid:u.uid,displayName:u.displayName||'Learner',email:u.email,photoURL:u.photoURL||'',role:r||'student',subjects:[],xp:0,level:1,streakDays:0,quizzesCompleted:0,profileComplete:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}toast('✅ Welcome!','ok');setTimeout(()=>location.href='app.html',1200)}
+async function gAuth(){try{const r=await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());await ok(r.user)}catch(e){toast('❌ '+e.message,'err')}}
+async function ghAuth(){try{const p=new firebase.auth.GithubAuthProvider();p.addScope('read:user');const r=await auth.signInWithPopup(p);await ok(r.user)}catch(e){toast('❌ '+e.message,'err')}}
+async function siEmail(){const e=document.getElementById('si-e').value.trim(),p=document.getElementById('si-p').value;if(!e||!p)return toast('Fill fields','err');try{await ok((await auth.signInWithEmailAndPassword(e,p)).user)}catch(er){toast('❌ '+er.message,'err')}}
+async function suEmail(){const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim(),e=document.getElementById('su-e').value.trim(),p=document.getElementById('su-p').value,r=document.getElementById('su-r').value;if(!fn||!e||!p)return toast('Fill fields','err');if(p.length<8)return toast('Password 8+','err');try{const res=await auth.createUserWithEmailAndPassword(e,p);await res.user.updateProfile({displayName:`${fn} ${ln}`});await ok(res.user,r)}catch(er){toast('❌ '+er.message,'err')}}
+</script>
+</body>
+</html>
